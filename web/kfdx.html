@@ -87,6 +87,15 @@ details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:4px 0;us
 </header>
 
 <div class="wrap">
+  <div class="card" style="border-color:#5c4a1f;background:#1c190f">
+    <b style="color:#e3b341">ℹ 지터 표기 안내</b>
+    <div class="mut" style="margin-top:6px;line-height:1.65">
+     · <b style="color:#e3b341">Max Jitter Budget</b> = <code>get_head</code>의 값. 설정 VL들의 Lmax로 FPGA/SW가 계산한
+       <b>AFDX 이론적 지터 상한</b>(<code>Σ(Lmax+20)×8/1Gbps</code>). 트래픽·BAG·carrier에 안 변함 = <u>측정값 아님</u>.<br>
+     · <b style="color:#3fb950">실측 지터</b> <code>Ttx−Tref</code>는 현 펌웨어 미구현. → PC 캡처로 <code>ΔTtx</code> 측정(<code>J=ΔT−BAG</code>)이 1차 경로.<br>
+     · 아래 <b>상태 판정</b>은 실제 카운터(tx drop/qfull, rx vlid/seq err)로 동작합니다.
+    </div>
+  </div>
   <!-- ===== HERO: control + verdict ===== -->
   <div class="grid2">
     <div class="card">
@@ -106,25 +115,26 @@ details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:4px 0;us
         <span class="chip" data-bag="1600">16ms</span>
       </div>
       <div class="flex" style="margin-top:14px">
-        <button class="big pri" id="b_start">▶ 측정 시작</button>
+        <button class="big pri" id="b_start">▶ 송신/모니터 시작</button>
         <button class="big" id="b_burst">＋ 버스트 송신</button>
-        <button class="stop" id="b_reset">↺ 지터 리셋</button>
+        <button class="stop" id="b_reset">↺ 카운터 리셋</button>
       </div>
       <div class="mut" id="ctlmsg" style="margin-top:9px">시작을 누르면 VL 설정→송신→모니터링이 한 번에 진행됩니다.</div>
     </div>
 
     <div class="card">
-      <h3>판정 <span class="mut" id="whenstat"></span></h3>
+      <h3>상태 판정 <span class="mut">(실측 카운터 기반)</span> <span class="mut" id="whenstat"></span></h3>
       <div class="verdict">
         <div class="vbadge IDLE" id="vbadge">IDLE</div>
         <div style="flex:1">
+          <div class="mut" style="font-size:10px;text-transform:uppercase;letter-spacing:.4px">AFDX Max Jitter Budget · 계산값(스펙, 측정 아님)</div>
           <div class="bignum"><span id="jnow">–</span> <small>ns</small></div>
           <div class="gauge"><div class="fill" id="gfill" style="width:0%"></div>
             <div class="thr" id="gthr" style="left:80%"></div></div>
           <div class="flex" style="margin-top:10px">
-            <div style="flex:1"><label>Jitter Limit (ns)</label><input id="limit" value="30000"></div>
+            <div style="flex:1"><label>예산 경보 상한 (ns)</label><input id="limit" value="30000"></div>
             <div class="mut" style="align-self:flex-end;padding-bottom:8px">
-              위반 <b id="viol" style="color:var(--err)">0</b></div>
+              이상 <b id="viol" style="color:var(--err)">0</b></div>
           </div>
         </div>
       </div>
@@ -134,10 +144,10 @@ details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:4px 0;us
   <!-- ===== charts ===== -->
   <div class="grid2">
     <div class="card">
-      <h3>송신 지터 (peak-hold)</h3>
+      <h3>AFDX Max Jitter Budget <span class="mut">(계산값 · get_head, 측정 아님)</span></h3>
       <canvas id="cJit" height="190"></canvas>
       <div class="legend">
-        <span><i style="background:#3fb950"></i>Max Jitter</span>
+        <span><i style="background:#3fb950"></i>지터 예산(스펙)</span>
         <span><i style="background:#f85149"></i>Limit</span>
         <span><i style="background:#e3b341"></i>Warning(80%)</span>
         <span id="jstat" class="mut"></span></div>
@@ -212,7 +222,7 @@ function toast(m,cls){const t=$('toast');t.textContent=m;t.className='toast show
 function raw(t){$('raw').textContent=t;}
 
 // ---- data ----
-let jit=[], tx=[], prevSent=null, prevT=null, viol=0, measuring=false;
+let jit=[], tx=[], prevSent=null, prevT=null, viol=0, measuring=false, errBase=null;
 function kv(text){const m={};text.split('\n').forEach(l=>{
   const x=l.match(/^\s*([A-Za-z_][\w ]*?):\s*(-?\d+)\s*$/);
   if(x)m[x[1].trim().replace(/ /g,'_')]=+x[2];});return m;}
@@ -230,7 +240,7 @@ async function startMeasure(){
   measuring=true;$('ctlmsg').textContent='VL 설정 중…';
   await run(`${K} --set ${vlArgs()}`).catch(()=>{});
   $('ctlmsg').textContent='지터 리셋…'; await run(`${K} --reset_stat`).catch(()=>{});
-  jit=[];tx=[];viol=0;prevSent=null;
+  jit=[];tx=[];viol=0;prevSent=null;errBase=null;
   $('ctlmsg').textContent='송신 시작…';
   await run(`${K} --send --vlid=${$('vlid').value} --udp --len=${$('len').value} --count=${$('count').value}`,10).catch(()=>{});
   $('ctlmsg').innerHTML='측정 중 — poll 로 갱신됩니다. <b style="color:#7ee787">running</b>';
@@ -241,7 +251,7 @@ $('b_start').onclick=startMeasure;
 $('b_burst').onclick=async()=>{toast('버스트 송신');
   await run(`${K} --send --vlid=${$('vlid').value} --udp --len=${$('len').value} --count=${$('count').value}`,10).catch(()=>{});
   setTimeout(refreshStatus,400);};
-$('b_reset').onclick=async()=>{await run(`${K} --reset_stat`);jit=[];viol=0;toast('지터 카운터 리셋','ok');refreshStatus();};
+$('b_reset').onclick=async()=>{await run(`${K} --reset_stat`);jit=[];viol=0;errBase=null;toast('카운터 리셋','ok');refreshStatus();};
 $('b_add').onclick=async()=>raw(await run(`${K} --add ${vlArgs()}`));
 $('b_set').onclick=async()=>raw(await run(`${K} --set ${vlArgs()}`));
 $('b_get').onclick=async()=>raw(await run(`${K} --get --vlid=${$('vlid').value}`));
@@ -262,15 +272,18 @@ async function refreshStatus(){
     if(prevSent!=null){const dt=(now-prevT)/1000;const r=Math.max(0,Math.round((sent-prevSent)/dt));
       tx.push({t:now,v:r});if(tx.length>300)tx.shift();}
     prevSent=sent;prevT=now;
-    // verdict
+    // verdict = 실측 이상 카운터(tx drop/qfull, rx vlid/seq err) 델타 기반
     const lim=+$('limit').value||1, jv=+mj||0;
+    const eN={drop:n.tx_drops||0,qf:n.tx_queue_full||0,vlid:n.rx_vlid_err_cnt||0,seq:n.rx_seq_err_cnt||0};
+    if(errBase===null)errBase={...eN};
+    const dErr=(eN.drop-errBase.drop)+(eN.qf-errBase.qf)+(eN.vlid-errBase.vlid)+(eN.seq-errBase.seq);
     let verdict='IDLE';
-    if(measuring||jit.length){verdict = jv>lim?'FAULT':(jv>lim*0.8?'WARNING':'NORMAL');}
+    if(measuring||jit.length){verdict = dErr>0?'FAULT':((n.tx_pkts_pending||0)>0?'WARNING':'NORMAL');}
     if(verdict==='FAULT')viol++;
     setVerdict(verdict,jv,lim);
     // cards
     $('statcards').innerHTML=[
-      card('Max Jitter',mj??'-','ns','hl'),
+      card('Jitter Budget',mj??'-','ns','hl'),
       card('tx 요청',n.tx_pkts??0,'pkt'),
       card('tx 송신',sent,'pkt'),
       card('tx 대기',n.tx_pkts_pending??0,'pkt',n.tx_pkts_pending>0?'warn':''),

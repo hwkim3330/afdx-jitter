@@ -75,4 +75,6 @@ insmod kfdx.ko          # dmesg에 BAR/버전 출력되면 성공
 | BAG/Rate 위반 | TxVlFifoFull, rx_vl_errors 카운터 |
 | 상위 SW 시각화 | 아직 없음 → **이 repo에서 만들 부분** |
 
-즉 측정·판정은 FPGA/드라이버에 있고, 우리가 만들 건 **수집·통계·실시간 시각화 상위 SW**.
+즉 FPGA/드라이버엔 VL/BAG/Lmax 설정 + **이론적 Max Jitter 예산(계산값)** + PTP 동기 + 카운터만 있고,
+**프레임별 실측 지터 `Ttx−Tref`는 미구현**이다(→ [jitter_analysis.md](jitter_analysis.md)).
+이번 개발 = 실제 송출 지터 계측(외부 캡처 `ΔTtx` → `J(n)=ΔT−BAG`) + 통계 + 이상검출 + 실시간 시각화.

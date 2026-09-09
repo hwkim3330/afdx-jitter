@@ -4,3 +4,7 @@ __pycache__/
 *.swp
 console-*.log
 scratchpad/
+
+# capture outputs
+*.pcap
+results_run.*
