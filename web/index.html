@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T2080RDB Serial Console</title>
+<link rel="stylesheet" href="/vendor/xterm.css">
+<style>
+  :root{--bg:#0b0f14;--panel:#131a22;--edge:#243040;--fg:#cfe3f5;--accent:#3fb950;--warn:#e3b341;--err:#f85149;--mut:#7b8ea3}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);
+    font-family:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace}
+  header{display:flex;align-items:center;gap:14px;padding:8px 14px;
+    background:var(--panel);border-bottom:1px solid var(--edge);flex-wrap:wrap}
+  header b{font-weight:700;letter-spacing:.3px}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--err);display:inline-block;
+    box-shadow:0 0 8px currentColor}
+  .dot.on{background:var(--accent)}
+  .grp{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+  select,button{background:#0e141b;color:var(--fg);border:1px solid var(--edge);
+    border-radius:6px;padding:5px 9px;font:inherit;font-size:12px;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.act{color:var(--accent)}
+  #term{position:absolute;top:47px;left:0;right:0;bottom:34px;padding:6px 8px}
+  footer{position:absolute;left:0;right:0;bottom:0;height:34px;display:flex;gap:8px;
+    align-items:center;padding:0 12px;background:var(--panel);border-top:1px solid var(--edge);
+    font-size:11px;color:var(--mut)}
+  footer .k{color:var(--fg)}
+  .sp{flex:1}
+</style>
+</head>
+<body>
+<header>
+  <span class="dot" id="dot"></span>
+  <b>T2080RDB</b><span style="color:var(--mut);font-size:12px" id="devlbl">/dev/ttyUSB0</span>
+  <div class="grp">baud
+    <select id="baud">
+      <option>9600</option><option>19200</option><option>38400</option>
+      <option>57600</option><option selected>115200</option>
+      <option>230400</option><option>460800</option><option>921600</option>
+    </select>
+  </div>
+  <button id="reconnect">↻ reconnect</button>
+  <button id="clear">clear</button>
+  <button id="brk" title="send serial BREAK">BREAK</button>
+  <button id="ctrlc">^C</button>
+  <button id="enter">Enter</button>
+  <div class="grp">log <button id="dl">download</button></div>
+  <div class="sp"></div>
+  <div class="grp" id="stat">connecting…</div>
+</header>
+<div id="term"></div>
+<footer>
+  <span><span class="k">클릭</span> 후 바로 타이핑하면 콘솔로 전송됩니다</span>
+  <span>·</span>
+  <span><span class="k">root</span> 무비번 로그인</span>
+  <div class="sp"></div>
+  <span id="bytes">rx 0 · tx 0</span>
+</footer>
+
+<script src="/vendor/xterm.js"></script>
+<script src="/vendor/addon-fit.js"></script>
+<script>
+const term = new Terminal({
+  cursorBlink:true, fontFamily:'ui-monospace,Menlo,Consolas,monospace',
+  fontSize:13, scrollback:20000,
+  theme:{background:'#0b0f14', foreground:'#cfe3f5', cursor:'#3fb950',
+         selectionBackground:'#264056'}
+});
+const fit = new FitAddon.FitAddon();
+term.loadAddon(fit);
+term.open(document.getElementById('term'));
+fit.fit();
+window.addEventListener('resize', ()=>{try{fit.fit()}catch(e){}});
+
+let ws=null, rx=0, tx=0, logBuf=[];
+const dot=document.getElementById('dot'), stat=document.getElementById('stat');
+const bytesEl=document.getElementById('bytes');
+function setStat(s,ok){stat.textContent=s; dot.classList.toggle('on',!!ok);}
+function updBytes(){bytesEl.textContent=`rx ${rx} · tx ${tx}`;}
+
+const dec=new TextDecoder('latin1');
+function connect(){
+  const host=location.hostname||'localhost';
+  ws=new WebSocket(`ws://${host}:8778`);
+  ws.binaryType='arraybuffer';
+  setStat('connecting…',false);
+  ws.onopen=()=>{setStat('connected',true); term.focus();};
+  ws.onclose=()=>{setStat('disconnected — 재연결하려면 ↻',false);};
+  ws.onerror=()=>{setStat('ws error',false);};
+  ws.onmessage=(ev)=>{
+    let s = typeof ev.data==='string' ? ev.data : dec.decode(new Uint8Array(ev.data));
+    if(s.charCodeAt(0)===0){ // control/status frame
+      setStat(s.slice(1), s.indexOf('open')>=0||s.indexOf('baud')>=0);
+      return;
+    }
+    rx+=s.length; updBytes(); logBuf.push(s);
+    if(logBuf.length>4000) logBuf.splice(0,2000);
+    term.write(s);
+  };
+}
+connect();
+
+// keystrokes -> serial
+term.onData(d=>{
+  if(ws&&ws.readyState===1){ ws.send(JSON.stringify({op:'data',d})); tx+=d.length; updBytes(); }
+});
+
+function sendData(d){ if(ws&&ws.readyState===1) ws.send(JSON.stringify({op:'data',d})); }
+document.getElementById('baud').onchange=e=>{
+  if(ws&&ws.readyState===1) ws.send(JSON.stringify({op:'baud',v:+e.target.value}));
+};
+document.getElementById('reconnect').onclick=()=>{ if(ws)ws.close(); connect(); };
+document.getElementById('clear').onclick=()=>term.clear();
+document.getElementById('ctrlc').onclick=()=>{sendData('\x03'); term.focus();};
+document.getElementById('enter').onclick=()=>{sendData('\r'); term.focus();};
+document.getElementById('brk').onclick=()=>{ if(ws&&ws.readyState===1) ws.send(JSON.stringify({op:'break'})); };
+document.getElementById('dl').onclick=()=>{
+  const blob=new Blob([logBuf.join('')],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='console-'+new Date().toISOString().replace(/[:.]/g,'-')+'.log';
+  a.click();
+};
+</script>
+</body>
+</html>
