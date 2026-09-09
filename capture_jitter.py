@@ -12,8 +12,9 @@ AFDX 실측 지터 캡처/분석 (외부 수신 ΔTtx 방식).
 주의: USB NIC(r8152)는 SW 타임스탬프라 수백us 노이즈 → 측정 지터의 바닥이 NIC.
       정밀 측정은 HW 타임스탬프 NIC(i225/i226 등, `ethtool -T` 에 hardware-*) 사용.
 
-실행(유저 권한; tcpdump 만 sudo. 비대화식은 SUDO_PASS):
-  SUDO_PASS=1 python3 capture_jitter.py --dev enxc84d44263ba6 --bag 200 --repeat 12 --out run
+사전 1회: sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump
+실행:
+  python3 capture_jitter.py --dev enxc84d44263ba6 --bag 200 --repeat 12 --out run
 """
 import argparse, asyncio, json, os, subprocess, time, random, statistics as st
 
@@ -94,17 +95,15 @@ def main():
     a=ap.parse_args()
     bag_us=a.bag*10.0
     dur=int(a.repeat*0.6+6)
-    user=os.environ.get("USER") or subprocess.check_output(["whoami"]).decode().strip()
-    pw=os.environ.get("SUDO_PASS")
-    cmd=["sudo","-S","timeout",str(dur),"tcpdump","-i",a.dev,"-nn",
-         "--time-stamp-precision=nano","-Z",user,"-w",a.pcap]
-    subprocess.run(["sudo","-S","rm","-f",a.pcap], input=(pw+"\n").encode() if pw else b"", stderr=subprocess.DEVNULL)
+    # tcpdump: setcap(cap_net_raw)로 sudo 없이. 사전 1회:
+    #   sudo setcap cap_net_raw,cap_net_admin+eip /usr/bin/tcpdump
+    try: os.path.exists(a.pcap) and os.remove(a.pcap)
+    except OSError: pass
     tderr=open("/tmp/afdx_td.log","wb")
-    td=subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=tderr)
-    if pw:
-        try: td.stdin.write((pw+"\n").encode()); td.stdin.flush()
-        except Exception: pass
-    time.sleep(3.0)
+    cmd=["timeout",str(dur),"tcpdump","-i",a.dev,"-nn",
+         "--time-stamp-precision=nano","-w",a.pcap]
+    td=subprocess.Popen(cmd, stderr=tderr)
+    time.sleep(2.0)
     try:
         asyncio.run(board_seq(a.wsport,a.vlid,a.bag,a.length,a.count,a.repeat))
     finally:
