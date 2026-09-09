@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KFDX AFDX Console</title>
+<style>
+:root{--bg:#0b0f14;--panel:#131a22;--panel2:#0e141b;--edge:#243040;--fg:#cfe3f5;
+ --accent:#3fb950;--blue:#58a6ff;--warn:#e3b341;--err:#f85149;--mut:#7b8ea3;--vlA:#58a6ff;--vlB:#d29922}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px/1.45 ui-monospace,Menlo,Consolas,monospace}
+header{display:flex;align-items:center;gap:12px;padding:9px 16px;background:var(--panel);border-bottom:1px solid var(--edge);position:sticky;top:0;z-index:5}
+header b{font-size:15px;letter-spacing:.4px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--err);box-shadow:0 0 8px currentColor}
+.dot.on{background:var(--accent)}
+a.nav{color:var(--mut);text-decoration:none;font-size:12px;padding:4px 8px;border:1px solid var(--edge);border-radius:6px}
+a.nav:hover{color:var(--fg);border-color:var(--accent)}
+.wrap{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:13px 14px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--blue)}
+label{display:block;font-size:11px;color:var(--mut);margin:7px 0 2px}
+input,select{width:100%;background:var(--panel2);color:var(--fg);border:1px solid var(--edge);border-radius:6px;padding:6px 8px;font:inherit}
+.row{display:flex;gap:8px}.row>div{flex:1}
+button{background:var(--panel2);color:var(--fg);border:1px solid var(--edge);border-radius:6px;padding:7px 11px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button.pri{background:#132a17;border-color:#2ea043;color:#7ee787}
+button.pri:hover{background:#173d1f}
+button.danger:hover{border-color:var(--err);color:var(--err)}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.stat{background:var(--panel2);border:1px solid var(--edge);border-radius:8px;padding:9px 11px}
+.stat .k{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+.stat .v{font-size:20px;font-weight:700;margin-top:3px}
+.stat .u{font-size:10px;color:var(--mut);font-weight:400}
+.stat.hl .v{color:var(--accent)}
+.stat.warn .v{color:var(--warn)}.stat.err .v{color:var(--err)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--edge)}
+th{color:var(--mut);font-weight:600;font-size:10px;text-transform:uppercase}
+td.tx{color:var(--vlA)}td.bi{color:#a5d6ff}
+pre{background:var(--panel2);border:1px solid var(--edge);border-radius:8px;padding:10px;
+ max-height:230px;overflow:auto;white-space:pre-wrap;margin:0;font-size:11.5px;color:#9fb4c8}
+canvas{width:100%;height:180px;background:var(--panel2);border:1px solid var(--edge);border-radius:8px;display:block}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--mut);margin:6px 2px 0}
+.legend i{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:5px}
+.mono{color:var(--mut);font-size:11px}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;border:1px solid var(--edge)}
+.badge.ok{color:var(--accent);border-color:#1f6f2e}
+.badge.no{color:var(--err);border-color:#5c2323}
+.pollbar{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mut)}
+</style></head>
+<body>
+<header>
+  <span class="dot" id="dot"></span><b>KFDX</b>
+  <span class="mono" id="hwver">AFDX NIC console</span>
+  <span class="sp" style="flex:1"></span>
+  <div class="pollbar">
+    poll <select id="pollint" style="width:auto"><option value="0">off</option>
+      <option value="500">0.5s</option><option value="1000" selected>1s</option>
+      <option value="2000">2s</option><option value="5000">5s</option></select>
+    <span id="polltick"></span>
+  </div>
+  <a class="nav" href="/">▤ raw terminal</a>
+</header>
+
+<div class="wrap">
+  <!-- ================= LEFT: controls ================= -->
+  <div>
+    <div class="card">
+      <h3>Virtual Link 설정</h3>
+      <div class="row"><div><label>VLID</label><input id="vlid" value="1"></div>
+        <div><label>BAG (×10µs)</label><input id="bag" value="1000"></div></div>
+      <div class="row"><div><label>dir</label><select id="dir">
+        <option>tx</option><option>rx</option><option>bi</option></select></div>
+        <div><label>type</label><select id="type">
+        <option>queueing</option><option>sampling</option><option>sap</option></select></div></div>
+      <div class="row"><div><label>min (Lmin)</label><input id="min" value="64"></div>
+        <div><label>max (Lmax)</label><input id="max" value="1518"></div></div>
+      <div class="row"><div><label>src_port</label><input id="src_port" value="0"></div>
+        <div><label>dst_port</label><input id="dst_port" value="0"></div></div>
+      <div><label>tx_buf_size</label><input id="tx_buf_size" value="0x20000"></div>
+      <div><label>name</label><input id="name" placeholder="(옵션)"></div>
+      <div class="btns">
+        <button class="pri" id="b_add">add</button>
+        <button id="b_set">set</button>
+        <button id="b_get">get</button>
+        <button class="danger" id="b_del">del</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>송신 (부하 생성)</h3>
+      <div class="row"><div><label>VLID</label><input id="s_vlid" value="1"></div>
+        <div><label>len (payload)</label><input id="s_len" value="17"></div></div>
+      <div class="row"><div><label>count</label><input id="s_count" value="10000"></div>
+        <div><label>proto</label><select id="s_proto"><option value="--udp">udp</option>
+          <option value="">raw</option></select></div></div>
+      <div class="btns">
+        <button class="pri" id="b_send">send</button>
+        <button id="b_send64">64B×1만</button>
+        <button id="b_send1518">1518B×5만</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>제어</h3>
+      <div class="btns">
+        <button id="b_refresh">↻ status 갱신</button>
+        <button id="b_getall">get_all</button>
+        <button class="danger" id="b_resetstat">reset_stat</button>
+        <button class="danger" id="b_resettx">reset_tx</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= RIGHT: monitor ================= -->
+  <div>
+    <div class="card">
+      <h3>실시간 상태 <span class="mono" id="whenstat"></span></h3>
+      <div class="stats" id="statcards"></div>
+    </div>
+
+    <div class="card">
+      <h3>송신 지터 (Max Jitter)</h3>
+      <canvas id="chart" width="900" height="180"></canvas>
+      <div class="legend"><span><i style="background:#3fb950"></i>Max Jitter (ns)</span>
+        <span id="jitstats" class="mono"></span></div>
+    </div>
+
+    <div class="card">
+      <h3>VL 테이블 <span class="mono">(get_all)</span></h3>
+      <table id="vltbl"><thead><tr><th>#</th><th>VLID</th><th>BAG</th><th>dir</th>
+        <th>type</th><th>MaxLen</th><th>skew</th><th>dst_port</th></tr></thead>
+        <tbody><tr><td colspan="8" class="mono">get_all 눌러 로드</td></tr></tbody></table>
+    </div>
+
+    <div class="card">
+      <h3>Raw 출력</h3>
+      <pre id="raw">준비됨. 좌측 버튼을 누르거나 poll 이 돌면 여기에 원문이 표시됩니다.</pre>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let ws=null, pending={}, seq=0;
+const dot=$('dot');
+function connect(){
+  ws=new WebSocket(`ws://${location.hostname||'localhost'}:8778`);
+  ws.onopen=()=>{dot.classList.add('on'); refreshStatus();};
+  ws.onclose=()=>{dot.classList.remove('on'); setTimeout(connect,1500);};
+  ws.onmessage=(ev)=>{
+    if(typeof ev.data!=='string')return;
+    let d; try{d=JSON.parse(ev.data);}catch(e){return;}
+    if(d.op==='cmdresult'&&pending[d.id]){pending[d.id](d.out);delete pending[d.id];}
+  };
+}
+connect();
+// run a shell command via bridge RPC, resolve with stdout text
+function run(cmd,t=8){
+  return new Promise((res,rej)=>{
+    if(!ws||ws.readyState!==1)return rej('ws down');
+    const id='c'+(++seq); pending[id]=res;
+    ws.send(JSON.stringify({op:'cmd',c:cmd,t,id}));
+    setTimeout(()=>{if(pending[id]){delete pending[id];rej('timeout');}},(t+4)*1000);
+  });
+}
+const K='cd /mnt/flash && ./kfdx_app';
+function showRaw(t){$('raw').textContent=t;}
+
+// ---------- VL config ----------
+function vlArgs(){
+  let a=`--vlid=${$('vlid').value} --bag=${$('bag').value} --dir=${$('dir').value}`+
+        ` --type=${$('type').value} --min=${$('min').value} --max=${$('max').value}`+
+        ` --src_port=${$('src_port').value} --dst_port=${$('dst_port').value}`+
+        ` --tx_buf_size=${$('tx_buf_size').value}`;
+  if($('name').value)a+=` --name=${$('name').value}`;
+  return a;
+}
+$('b_add').onclick=async()=>showRaw(await run(`${K} --add ${vlArgs()}`));
+$('b_set').onclick=async()=>showRaw(await run(`${K} --set ${vlArgs()}`));
+$('b_get').onclick=async()=>showRaw(await run(`${K} --get --vlid=${$('vlid').value}`));
+$('b_del').onclick=async()=>{if(confirm('VL '+$('vlid').value+' 삭제?'))showRaw(await run(`${K} --del --vlid=${$('vlid').value}`));};
+
+// ---------- send ----------
+async function doSend(vlid,len,count,proto){
+  showRaw(`send VL${vlid} len=${len} count=${count} ...`);
+  const o=await run(`${K} --send --vlid=${vlid} ${proto} --len=${len} --count=${count}`,10);
+  showRaw('send 요청 완료.\n'+o);
+  setTimeout(refreshStatus,600);
+}
+$('b_send').onclick=()=>doSend($('s_vlid').value,$('s_len').value,$('s_count').value,$('s_proto').value);
+$('b_send64').onclick=()=>doSend($('s_vlid').value,17,10000,'--udp');
+$('b_send1518').onclick=()=>doSend($('s_vlid').value,1471,50000,'--udp');
+
+// ---------- reset ----------
+$('b_resetstat').onclick=async()=>{showRaw(await run(`${K} --reset_stat`));jit=[];draw();refreshStatus();};
+$('b_resettx').onclick=async()=>showRaw(await run(`${K} --reset_tx`));
+
+// ---------- status parse ----------
+function kv(text){const m={};text.split('\n').forEach(l=>{
+  const x=l.match(/^\s*([A-Za-z_][\w ]*?):\s*(-?\d+)\s*$/);
+  if(x)m[x[1].trim().replace(/ /g,'_')]=+x[2];});return m;}
+function pickJitter(head){const m=head.match(/Max Jitter:\s*(\d+)/);return m?+m[1]:null;}
+
+let jit=[]; // {t, v}
+function statCard(k,v,u,cls){return `<div class="stat ${cls||''}"><div class="k">${k}</div>`+
+  `<div class="v">${v}<span class="u"> ${u||''}</span></div></div>`;}
+
+async function refreshStatus(){
+  try{
+    const [head,net] = await Promise.all([
+      run(`${K} --get_head`,6),
+      run(`${K} --status --net --hw`,6)
+    ]);
+    const mj=pickJitter(head);
+    const n=kv(net);
+    // jitter series
+    if(mj!=null){jit.push({t:Date.now(),v:mj}); if(jit.length>240)jit.shift(); draw();}
+    // head counts
+    const tot=(head.match(/Total:\s*(\d+)/)||[])[1]||'-';
+    const txn=(head.match(/Tx:\s*(\d+)/)||[])[1]||'-';
+    // cards
+    const sent=n.tx_pkts_sent??0, req=n.tx_pkts??0, pend=n.tx_pkts_pending??0;
+    const cards=[
+      statCard('Max Jitter', mj??'-', 'ns','hl'),
+      statCard('VL 총', tot, `tx${txn}`),
+      statCard('tx 요청', req, 'pkts'),
+      statCard('tx 송신', sent, 'pkts'),
+      statCard('tx 대기', pend, 'pkts', pend>0?'warn':''),
+      statCard('tx drop', n.tx_drops??0, '', (n.tx_drops>0)?'err':''),
+      statCard('tx qfull', n.tx_queue_full??0,'', (n.tx_queue_full>0)?'warn':''),
+      statCard('PHY-A try', n.phy_a_try_cnt??0,''),
+      statCard('PHY-B try', n.phy_b_try_cnt??0,''),
+      statCard('rx pkts', n.rx_pkts??0,''),
+      statCard('rx vlid_err', n.rx_vlid_err_cnt??0,'', (n.rx_vlid_err_cnt>0)?'err':''),
+      statCard('sch_try', n.sch_try_cnt??0,''),
+    ].join('');
+    $('statcards').innerHTML=cards;
+    $('whenstat').textContent='· '+new Date().toLocaleTimeString();
+    showRaw(head.trim()+'\n\n'+net.trim());
+  }catch(e){$('whenstat').textContent='· '+e;}
+}
+$('b_refresh').onclick=refreshStatus;
+
+// ---------- get_all -> table ----------
+$('b_getall').onclick=async()=>{
+  const t=await run(`${K} --get_all`,8);
+  showRaw(t);
+  const blocks=t.split(/VL_CFG\[(\d+)\]/).slice(1);
+  let rows='';
+  for(let i=0;i<blocks.length;i+=2){
+    const idx=blocks[i], b=blocks[i+1]||'';
+    const g=(re)=>{const m=b.match(re);return m?m[1]:'';};
+    const vlid=g(/VLID:\s*(\d+)/), bag=g(/BAG:\s*(\d+)/);
+    const typ=g(/Type:\s*(\w+)/), dir=g(/Dir:\s*(\w+)/);
+    const mlen=g(/MaxLen:\s*(\d+)/), skew=g(/Skew:\s*([\dsn ]+)/).trim();
+    const dp=g(/dst_port\s*:\s*(\d+)/);
+    rows+=`<tr><td>${idx}</td><td>${vlid}</td><td>${bag}</td>`+
+      `<td class="${(dir||'').toLowerCase()}">${dir}</td><td>${typ}</td>`+
+      `<td>${mlen}</td><td class="mono">${skew}</td><td>${dp}</td></tr>`;
+  }
+  $('vltbl').querySelector('tbody').innerHTML=rows||'<tr><td colspan="8">파싱 실패</td></tr>';
+};
+
+// ---------- jitter chart ----------
+const cv=$('chart'),cx=cv.getContext('2d');
+function draw(){
+  const W=cv.width,H=cv.height,pad=28;cx.clearRect(0,0,W,H);
+  if(!jit.length){return;}
+  const vs=jit.map(p=>p.v),mn=Math.min(...vs),mx=Math.max(...vs);
+  const lo=Math.min(mn,0),hi=mx*1.15||1;
+  // grid + axis
+  cx.strokeStyle='#243040';cx.fillStyle='#7b8ea3';cx.font='10px monospace';cx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad+(H-2*pad)*i/4;const val=Math.round(hi-(hi-lo)*i/4);
+    cx.beginPath();cx.moveTo(pad,y);cx.lineTo(W-6,y);cx.stroke();
+    cx.fillText(val,2,y+3);}
+  // line
+  cx.strokeStyle='#3fb950';cx.lineWidth=1.8;cx.beginPath();
+  jit.forEach((p,i)=>{const x=pad+(W-pad-6)*i/Math.max(1,jit.length-1);
+    const y=pad+(H-2*pad)*(1-(p.v-lo)/(hi-lo));
+    i?cx.lineTo(x,y):cx.moveTo(x,y);});
+  cx.stroke();
+  // last point
+  const last=jit[jit.length-1];
+  const lx=W-6,ly=pad+(H-2*pad)*(1-(last.v-lo)/(hi-lo));
+  cx.fillStyle='#3fb950';cx.beginPath();cx.arc(lx,ly,3,0,7);cx.fill();
+  $('jitstats').textContent=`now ${last.v} · min ${mn} · max ${mx} · p2p ${mx-mn} · n=${jit.length}`;
+}
+window.addEventListener('resize',()=>{cv.width=cv.clientWidth;draw();});
+setTimeout(()=>{cv.width=cv.clientWidth;draw();},100);
+
+// ---------- polling ----------
+let timer=null;
+function setPoll(){
+  if(timer){clearInterval(timer);timer=null;}
+  const ms=+$('pollint').value;
+  if(ms>0){timer=setInterval(()=>{refreshStatus();$('polltick').textContent='●';
+    setTimeout(()=>$('polltick').textContent='',200);},ms);}
+}
+$('pollint').onchange=setPoll; setPoll();
+</script>
+</body></html>
