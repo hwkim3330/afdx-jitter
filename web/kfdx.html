@@ -163,6 +163,26 @@ details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:4px 0;us
 
   <!-- ===== counters ===== -->
   <div class="card">
+    <h3>실측 지터 캡처 <span class="mut">(외부 수신 ΔTtx · J = ΔT − BAG)</span></h3>
+    <div class="flex">
+      <div><label>수신 NIC</label><input id="cap_dev" value="enxc84d44263ba6" style="width:180px"></div>
+      <div><label>BAG(×10µs)</label><input id="cap_bag" value="200" style="width:90px"></div>
+      <div><label>repeat</label><input id="cap_rep" value="10" style="width:70px"></div>
+      <button class="pri" id="b_capture">▶ 캡처 실행</button>
+      <span class="mut" id="cap_msg">보드 송신 + PC 캡처 후 실측 지터를 계산합니다 (~15s)</span>
+    </div>
+    <div class="stats" id="cap_stats" style="margin-top:12px"></div>
+    <div class="grid2" style="margin-top:12px">
+      <div><canvas id="cCapDt" height="170"></canvas>
+        <div class="legend"><span><i style="background:#3fb950"></i>ΔTtx</span>
+          <span><i style="background:#f85149"></i>BAG</span><span id="capdt_s" class="mut"></span></div></div>
+      <div><canvas id="cCapHist" height="170"></canvas>
+        <div class="legend"><span><i style="background:#58a6ff"></i>J=ΔT−BAG 분포</span></div></div>
+    </div>
+    <div class="mut" style="margin-top:8px">⚠ USB NIC은 SW 타임스탬프라 ±수백µs 노이즈. 정밀 측정은 HW 타임스탬프 NIC(i225/i226) 필요.</div>
+  </div>
+
+  <div class="card">
     <h3>카운터</h3>
     <div class="stats" id="statcards"></div>
   </div>
@@ -203,13 +223,14 @@ details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:4px 0;us
 
 <script>
 const $=id=>document.getElementById(id);
-let ws=null,pending={},seq=0;
+let ws=null,pending={},capPending={},seq=0;
 function connect(){
   ws=new WebSocket(`ws://${location.hostname||'localhost'}:8778`);
   ws.onopen=()=>{$('dot').classList.add('on');refreshStatus();loadTable();};
   ws.onclose=()=>{$('dot').classList.remove('on');setTimeout(connect,1500);};
   ws.onmessage=e=>{if(typeof e.data!=='string')return;let d;try{d=JSON.parse(e.data)}catch(x){return}
-    if(d.op==='cmdresult'&&pending[d.id]){pending[d.id](d.out);delete pending[d.id];}};
+    if(d.op==='cmdresult'&&pending[d.id]){pending[d.id](d.out);delete pending[d.id];}
+    if(d.op==='captureresult'&&capPending[d.id]){capPending[d.id](d.data);delete capPending[d.id];}};
 }
 connect();
 function run(cmd,t=8){return new Promise((res,rej)=>{
@@ -368,6 +389,66 @@ async function loadTable(){
   $('vltbl').querySelector('tbody').innerHTML=rows||'<tr><td colspan=8>—</td></tr>';}catch(e){}
 }
 
+// ---- 실측 지터 캡처 ----
+function capture(o){return new Promise((res,rej)=>{
+  if(!ws||ws.readyState!==1)return rej('ws down');
+  const id='cap'+(++seq);capPending[id]=res;
+  ws.send(JSON.stringify({op:'capture',id,...o}));
+  setTimeout(()=>{if(capPending[id]){delete capPending[id];rej('timeout')}},60000);});}
+$('b_capture').onclick=async()=>{
+  $('cap_msg').textContent='캡처 중… 송신+수신 (~15s)';$('b_capture').disabled=true;
+  try{
+    const d=await capture({dev:$('cap_dev').value,bag:+$('cap_bag').value,repeat:+$('cap_rep').value});
+    if(!d||d.error){$('cap_msg').textContent='실패: '+((d&&d.error)||'no data');}
+    else{renderCapture(d);$('cap_msg').textContent='완료 · '+new Date().toLocaleTimeString();}
+  }catch(e){$('cap_msg').textContent='오류: '+e;}
+  finally{$('b_capture').disabled=false;}
+};
+function renderCapture(d){
+  const st=x=>x==null?'-':(+x).toFixed(1);
+  $('cap_stats').innerHTML=[
+    card('프레임',d.frames??'-',''),
+    card('유효표본',d.used_intervals??'-',''),
+    card('ΔTtx 평균',st(d.dt_mean),'µs','hl'),
+    card('BAG',st(d.bag_us),'µs'),
+    card('Jitter RMS',st(d.j_rms),'µs'),
+    card('|J| max',st(d.j_abs_max),'µs',(d.j_abs_max>d.bag_us*0.3)?'warn':''),
+    card('P2P',st(d.p2p),'µs'),
+    card('stdev',st(d.stdev),'µs'),
+  ].join('');
+  drawCapDt(d);drawCapHist(d);
+}
+function drawCapDt(d){
+  const cv=$('cCapDt');fit(cv);const cx=cv.getContext('2d'),W=cv.width,H=cv.height,p=32;
+  cx.clearRect(0,0,W,H);const dt=d.deltas_us||[];if(!dt.length)return;
+  const bag=d.bag_us,mn=Math.min(...dt),mx=Math.max(...dt);
+  const lo=Math.min(mn,bag)*0.98,hi=Math.max(mx,bag)*1.02;
+  const Y=v=>p+(H-2*p)*(1-(v-lo)/(hi-lo));
+  cx.strokeStyle='#22303f';cx.fillStyle='#8095a8';cx.font='10px monospace';
+  for(let i=0;i<=4;i++){const y=p+(H-2*p)*i/4;cx.beginPath();cx.moveTo(p,y);cx.lineTo(W-6,y);cx.stroke();
+    cx.fillText(Math.round(hi-(hi-lo)*i/4),2,y+3);}
+  cx.strokeStyle='#f85149';cx.setLineDash([5,4]);cx.beginPath();cx.moveTo(p,Y(bag));cx.lineTo(W-6,Y(bag));cx.stroke();cx.setLineDash([]);
+  cx.strokeStyle='#3fb950';cx.lineWidth=1.2;cx.beginPath();
+  dt.forEach((v,i)=>{const x=p+(W-p-6)*i/Math.max(1,dt.length-1);i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});
+  cx.stroke();
+  $('capdt_s').textContent=`n=${dt.length}`;
+}
+function drawCapHist(d){
+  const cv=$('cCapHist');fit(cv);const cx=cv.getContext('2d'),W=cv.width,H=cv.height,p=32;
+  cx.clearRect(0,0,W,H);const dt=d.deltas_us||[];if(!dt.length)return;
+  const J=dt.map(v=>v-d.bag_us);const mn=Math.min(...J),mx=Math.max(...J);
+  const NB=40,bins=new Array(NB).fill(0),span=(mx-mn)||1;
+  J.forEach(v=>{let b=Math.floor((v-mn)/span*NB);if(b>=NB)b=NB-1;if(b<0)b=0;bins[b]++;});
+  const bmax=Math.max(...bins);
+  cx.fillStyle='#58a6ff';
+  bins.forEach((c,i)=>{const x=p+(W-p-6)*i/NB,w=(W-p-6)/NB-1,h=(H-2*p)*c/bmax;
+    cx.fillRect(x,H-p-h,w,h);});
+  // 0선
+  const zx=p+(W-p-6)*(0-mn)/span;cx.strokeStyle='#f85149';cx.setLineDash([4,3]);
+  cx.beginPath();cx.moveTo(zx,p);cx.lineTo(zx,H-p);cx.stroke();cx.setLineDash([]);
+  cx.fillStyle='#8095a8';cx.font='10px monospace';
+  cx.fillText(mn.toFixed(0),p,H-6);cx.fillText(mx.toFixed(0),W-40,H-6);cx.fillText('J[µs]',W/2-15,H-6);
+}
 // ---- poll ----
 let timer=null;
 function setPoll(){if(timer){clearInterval(timer);timer=null;}const ms=+$('pollint').value;

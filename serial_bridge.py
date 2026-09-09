@@ -8,7 +8,7 @@ Web serial terminal + KFDX command RPC bridge for the T2080RDB / KFDX AFDX NIC.
 Usage:
   python3 serial_bridge.py --dev /dev/ttyUSB0 --baud 115200 --http 0.0.0.0:8777
 """
-import argparse, asyncio, json, os, random, re, threading, time
+import argparse, asyncio, json, os, random, re, sys, threading, time
 import serial
 import websockets
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -132,6 +132,22 @@ async def ws_handler(ws):
                     out, ok = await run_cmd(cmd["c"], float(cmd.get("t", 8.0)))
                     await ws.send(json.dumps({"op":"cmdresult","id":cmd.get("id"),
                                               "cmd":cmd["c"],"out":out,"ok":ok}))
+                elif op == "capture":
+                    ob="/tmp/gui_cap"
+                    here=os.path.dirname(os.path.abspath(__file__))
+                    proc=await asyncio.create_subprocess_exec(
+                        sys.executable, os.path.join(here,"capture_jitter.py"),
+                        "--dev", str(cmd.get("dev","enxc84d44263ba6")),
+                        "--bag", str(cmd.get("bag",200)),
+                        "--len", str(cmd.get("len",17)),
+                        "--count", str(cmd.get("count",2000)),
+                        "--repeat", str(cmd.get("repeat",10)),
+                        "--wsport","8778","--out",ob,"--pcap",ob+".pcap",
+                        stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+                    await proc.wait()
+                    try: data=json.load(open(ob+".json"))
+                    except Exception as e: data={"error":str(e)}
+                    await ws.send(json.dumps({"op":"captureresult","id":cmd.get("id"),"data":data}))
             else:
                 HUB.write(msg)
     finally:
