@@ -54,7 +54,7 @@ insmod kfdx.ko          # dmesg에 BAR/버전 출력되면 성공
 ./kfdx_app --status --net --hw
 ```
 드라이버/앱이 VL별로 리포트하는 값:
-- `Max Jitter`               ← **송신 지터 (과제의 J(n))**
+- `Max Jitter`  ← ⚠ 측정값 아님. AFDX 지터 **예산(스펙)** = Σ(Lmax+20)*8/1Gbps. docs/jitter_analysis.md 참조
 - `rx_vl_errors`, `rx_vl_errors_co`, `rx_vlid_err_cnt`
 - `kfdxTxVlFifoFullIrq/Ish`  ← TX FIFO full (백프레셔/BAG 위반 징후)
 - `Received N packets at VLk`
@@ -71,7 +71,7 @@ insmod kfdx.ko          # dmesg에 BAR/버전 출력되면 성공
 | 과제 개념 | KFDX에서 |
 |---|---|
 | Virtual Link / BAG / Lmax | `--add --vlid --bag --max/--min` 이미 구현 |
-| Timestamp A/B, Jitter | FPGA가 `Max Jitter` 로 리포트 (PTP HW 시간축) |
+| Timestamp A/B, Jitter | ⚠ **미구현**. `Max Jitter`는 스펙 상한(SW 계산). 실측 Ttx−Tref 없음 → jitter_analysis.md |
 | BAG/Rate 위반 | TxVlFifoFull, rx_vl_errors 카운터 |
 | 상위 SW 시각화 | 아직 없음 → **이 repo에서 만들 부분** |
 
