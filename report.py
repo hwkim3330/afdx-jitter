@@ -96,7 +96,7 @@ b{{color:#e6f0fa}}b.hl{{color:#3fb950}}code{{background:#0e141b;padding:1px 5px;
     mdrows=""
     for r in rows:
         err=r["dt_mean"]-r["bag_us"]
-        mdrows+=f"| {int(r['bag_us']/10)} | {f(r['bag_us']/1000,3)}ms | {f(r['dt_mean'])} | {err:+.2f} | **{f(r.get('rob_std',0))}** | {f(r.get('mad',0))} | {f(r['j_rms'])} | {f(r['j_abs_max'],1)} | {f(r['p2p'],1)} | {r['used_intervals']} |\n"
+        mdrows+=f"| {int(r['bag_us']/10)} | {f(r['bag_us']/1000,3)}ms | {f(r['dt_mean'])} | {err:+.2f} | **{f(r.get('rob_std',0))}** | {f(r.get('mad',0))} | {f(r['j_rms'])} | {f(r['j_abs_max'],1)} | {r['used_intervals']} | {r.get('verdict','?')} | {r.get('seq_loss',0)}/{r.get('lmax_violation',0)} |\n"
     md=f"""# AFDX 송신 지터 측정 리포트
 
 - **측정 시각**: {ts}
@@ -106,8 +106,8 @@ b{{color:#e6f0fa}}b.hl{{color:#3fb950}}code{{background:#0e141b;padding:1px 5px;
 
 ## 요약
 
-| BAG(×10µs) | 목표 | 평균ΔT(µs) | 오차 | FPGA지터 MAD-std | MAD | RMS(전체·노이즈포함) | \|J\|max | P2P | 표본 |
-|---|---|---|---|---|---|---|---|---|---|
+| BAG(×10µs) | 목표 | 평균ΔT(µs) | 오차 | FPGA지터 MAD-std | MAD | RMS(전체·노이즈포함) | \|J\|max | 표본 | 판정 | 손실/Lmax |
+|---|---|---|---|---|---|---|---|---|---|---|
 {mdrows}
 - 평균 ΔTtx = BAG 일치 → **FPGA 페이싱 정확**. Jitter RMS = 송출 간격 변동(작을수록 좋음).
 - 시각 차트/히스토그램: 같은 타임스탬프의 `.html` 참조.

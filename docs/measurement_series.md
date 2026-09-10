@@ -60,3 +60,12 @@
 - 격리 전 3.8~140µs 변동은 전부 PC 측정 노이즈(C-state/governor/코어경합)였음 — HW 한계 아님.
 - 재현: `sudo ./measure_setup.sh enp4s0 8` 후 `python3 capture_jitter.py --dev enp4s0 --bag N`.
 - USB 시리얼 vs LAN 제어는 측정에 무관(FPGA 내부 BAG 페이싱, 관리/캡처 경로 분리).
+
+## 이상 검출 (2026-09-10, 과제 "이상 검출" 절반)
+capture_jitter가 프레임별로 검출 → VL 판정(NORMAL/WARNING/FAULT):
+- **시퀀스 손실/중복/재정렬**: AFDX SN(프레임 마지막 바이트, ARINC664 1~255 순환·0예약)로 판정. 타임스탬프 무관 = 신뢰.
+- **Lmax 위반**: 프레임 크기 > Lmax(`--lmax`).
+- **Rate 위반**: 간격 < 0.7×BAG(버스트 내, 너무 빠른 송신).
+- **간격 이상치**: |ΔT−BAG| > 6×MAD-std → 참고(PC 측정노이즈 포함, 판정 미반영).
+- **판정**: 프레임레벨(시퀀스/Lmax)만 FAULT 좌우(신뢰), Rate→WARNING, 간격이상치는 참고.
+- 검증: 정상=NORMAL, 1518B+`--lmax 512`=FAULT(Lmax위반 전건). report/GUI에 판정 표시.
