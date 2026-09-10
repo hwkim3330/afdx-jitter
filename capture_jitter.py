@@ -92,6 +92,7 @@ def main():
     ap.add_argument("--wsport", default="8778")
     ap.add_argument("--out", default=None)
     ap.add_argument("--pcap", default="/tmp/afdx_cap.pcap")
+    ap.add_argument("--hwts", action="store_true", help="NIC 하드웨어 타임스탬프(-j adapter_unsynced); i225/226 등")
     a=ap.parse_args()
     bag_us=a.bag*10.0
     dur=int(a.repeat*0.6+6)
@@ -101,7 +102,9 @@ def main():
     except OSError: pass
     tderr=open("/tmp/afdx_td.log","wb")
     cmd=["timeout",str(dur),"tcpdump","-i",a.dev,"-nn",
-         "--time-stamp-precision=nano","-w",a.pcap]
+         "--time-stamp-precision=nano"]
+    if a.hwts: cmd+=["-j","adapter_unsynced"]   # NIC PHC 원시 타임스탬프(간격측정엔 OK)
+    cmd+=["-w",a.pcap]
     td=subprocess.Popen(cmd, stderr=tderr)
     time.sleep(2.0)
     try:
