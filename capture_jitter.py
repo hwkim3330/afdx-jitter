@@ -91,7 +91,7 @@ def analyze(pcap, bag_us, out, lmax=1518, vlid=None):
     d=[x for x in d_all if 0.3*bag_us < x < 1.7*bag_us]
     bounds=len(d_all)-len(d)
     J=[x-bag_us for x in d]
-    # robust: 중앙값 기준 편차, MAD, 트림. 배경노이즈 스파이크(측정계) 제거해 FPGA 고유지터 추정
+    # robust: 중앙값 기준 편차, MAD, 트림. 배경노이즈 스파이크 제거한 강건 지터. 이는 FPGA 내부지터가 아니라 외부 관측지터(측정 상한, 호스트 노이즈 포함)
     med=st.median(d)
     absdev=sorted(abs(x-med) for x in d)
     mad=absdev[len(absdev)//2]
@@ -111,7 +111,7 @@ def analyze(pcap, bag_us, out, lmax=1518, vlid=None):
     print(f"  버스트 {res['bursts']}개, 지터 유효표본 {res['used_intervals']} (경계 {bounds} 제외)")
     print(f"  ΔTtx us : min {res['dt_min']:.1f}  max {res['dt_max']:.1f}  mean {res['dt_mean']:.2f}  median {res['dt_median']:.2f}")
     print(f"  Jitter  : |J|max {res['j_abs_max']:.1f}  RMS {res['j_rms']:.1f}  P2P {res['p2p']:.1f} us  (전체)")
-    print(f"  Robust  : MAD-std {res['rob_std']:.2f}  trimRMS {res['trim_rms']:.2f}  p95 {res['j_p95']:.1f}  p99 {res['j_p99']:.1f} us  ← FPGA 고유지터")
+    print(f"  Robust  : MAD-std {res['rob_std']:.2f}  trimRMS {res['trim_rms']:.2f}  p95 {res['j_p95']:.1f}  p99 {res['j_p99']:.1f} us  ← 관측지터(측정상한, 호스트노이즈 포함)")
     a=res
     print(f"  이상검출: 판정 [{a['verdict']}]  손실 {a['seq_loss']}  중복 {a['seq_dup']}  재정렬 {a['seq_reorder']}"
           f"  Rate위반 {a['rate_violation']}  Lmax위반 {a['lmax_violation']}  간격이상치 {a['outliers']}")

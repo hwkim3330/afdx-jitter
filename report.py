@@ -30,7 +30,7 @@ def summary_chart(rows, png):
     except Exception: return ""
     bags=[r["bag_us"]/1000 for r in rows]
     fig,ax=plt.subplots(1,2,figsize=(11,3.6))
-    ax[0].plot(bags,[r.get("rob_std",0) for r in rows],'o-',color="#3fb950",lw=2,label="FPGA jitter (MAD-std)")
+    ax[0].plot(bags,[r.get("rob_std",0) for r in rows],'o-',color="#3fb950",lw=2,label="Observed jitter MAD-std (SW ts)")
     ax[0].plot(bags,[r["j_rms"] for r in rows],'s--',color="#e3b341",lw=1,label="RMS (all,w/noise)")
     ax[0].set_xlabel("BAG [ms]"); ax[0].set_ylabel("Jitter [us]"); ax[0].set_title("Jitter vs BAG")
     ax[0].legend(fontsize=8); ax[0].grid(alpha=.3)
@@ -89,7 +89,7 @@ def main():
     def interp(r):
         err=abs(r['dt_mean']-r['bag_us']); p=[]
         p.append("평균 간격이 BAG와 "+("정확히 일치" if err<1 else f"{err:.1f}µs 차")+f" → FPGA 페이싱 {'정확' if err<2 else '약간편차(측정노이즈)'}.")
-        p.append(f"robust 지터(MAD-std) {f(r.get('rob_std',0))}µs = 배경노이즈 제거한 FPGA 고유지터 추정. RMS(전체) {f(r['j_rms'])}µs는 PC 스파이크 포함.")
+        p.append(f"robust 지터(MAD-std) {f(r.get('rob_std',0))}µs = robust 관측지터(외부 SW타임스탬프, 호스트노이즈 포함, FPGA지터의 측정상한). RMS(전체) {f(r['j_rms'])}µs는 PC 스파이크 포함.")
         vd=r.get('verdict')
         if vd=='NORMAL': p.append("이상 없음: 시퀀스 연속, Lmax·Rate 정상.")
         elif vd=='WARNING': p.append(f"Rate 위반 {r.get('rate_violation',0)}건 — 간격 0.7×BAG 미만(측정노이즈 오탐 가능).")
@@ -168,8 +168,8 @@ ul{{margin:6px 0;padding-left:20px;font-size:13px;line-height:1.7}}
 <ul>
 <li><b>ΔTtx(n)</b> = 연속 AFDX 프레임의 PC 수신 타임스탬프 차 (외부 계측). <b>J(n) = ΔTtx(n) − BAG</b> = 프레임별 송출 지터.</li>
 <li><b>평균 ΔTtx = BAG</b> 이면 FPGA가 BAG 페이싱을 정확히 지킨다는 뜻(대역폭 보장).</li>
-<li>각 BAG를 <b>여러 번 측정해 가장 조용한 런(robust 지터 최소)</b>을 채택 — PC 노이즈는 지터를 더하기만 하므로 최소값이 FPGA 고유지터에 가장 근접(upper bound).</li>
-<li><b>지터 MAD-std</b> = 1.4826×MAD(중앙값절대편차). 배경노이즈 스파이크에 강건 → <b>FPGA 고유지터 추정</b>. RMS(전체)는 PC 노이즈 스파이크 포함이라 과대평가.</li>
+<li>각 BAG를 <b>여러 번 측정해 가장 조용한 런(robust 지터 최소)</b>을 채택 — PC 노이즈는 지터를 더하기만 하므로 최소값이 측정상한으로 가장 타이트(관측지터 하한; FPGA 내부지터 아님).</li>
+<li><b>지터 MAD-std</b> = 1.4826×MAD(중앙값절대편차). 배경노이즈에 강건 → <b>관측 지터(외부 SW타임스탬프, 호스트노이즈 포함) = FPGA지터의 측정상한</b>. RMS(전체)는 PC 노이즈 스파이크 포함이라 과대평가.</li>
 <li><b>이상 검출</b>: 시퀀스 손실/중복/재정렬(AFDX SN, ARINC664 1~255·0예약), Lmax 위반, Rate 위반(간격&lt;0.7×BAG), 간격 이상치(참고). 판정 NORMAL/WARNING/FAULT.</li>
 <li>⚠ KFDX <code>get_head</code>의 <b>Max Jitter는 측정값이 아니라 계산된 AFDX 스펙 상한</b> <code>Σ(Lmax+20)×8/1Gbps</code>. 본 리포트는 외부 실측 지터.</li>
 </ul></div>
@@ -178,7 +178,7 @@ ul{{margin:6px 0;padding-left:20px;font-size:13px;line-height:1.7}}
 <div class=card>
 <table><thead><tr><th>BAG(×10µs)</th><th>목표</th><th>평균ΔT</th><th>오차</th><th>중앙값</th><th>지터 MAD-std</th><th>MAD</th><th>RMS(전체)</th><th>|J|max</th><th>J p95</th><th>J p99</th><th>P2P</th><th>표본</th><th>판정</th></tr></thead>
 <tbody>{trs}</tbody></table>
-<div class=mut style='margin-top:8px'>단위 µs. 오차=평균ΔT−BAG(0에 가까울수록 페이싱 정확). MAD-std=FPGA 고유지터 추정. p95/p99=|J| 백분위.</div></div>
+<div class=mut style='margin-top:8px'>단위 µs. 오차=평균ΔT−BAG(0에 가까울수록 페이싱 정확). MAD-std=관측지터(측정상한, 호스트노이즈 포함). p95/p99=|J| 백분위.</div></div>
 
 {f'<h2>4. 추세</h2><div class=card><img src="{sc}"><div class=mut style="margin-top:6px">좌: BAG별 지터(MAD-std=고유지터, RMS=노이즈포함). 우: 페이싱 정확도(|평균ΔT−BAG|).</div></div>' if sc else ''}
 
@@ -211,13 +211,13 @@ ul{{margin:6px 0;padding-left:20px;font-size:13px;line-height:1.7}}
 
 ## 요약
 
-| BAG(×10µs) | 목표 | 평균ΔT(µs) | 오차 | FPGA지터 MAD-std | MAD | RMS(전체·노이즈포함) | \|J\|max | 표본 | 판정 | 손실/Lmax |
+| BAG(×10µs) | 목표 | 평균ΔT(µs) | 오차 | 관측지터 MAD-std | MAD | RMS(전체·노이즈포함) | \|J\|max | 표본 | 판정 | 손실/Lmax |
 |---|---|---|---|---|---|---|---|---|---|---|
 {mdrows}
 - 평균 ΔTtx = BAG 일치 → **FPGA 페이싱 정확**. Jitter RMS = 송출 간격 변동(작을수록 좋음).
 - 시각 차트/히스토그램: 같은 타임스탬프의 `.html` 참조.
 
-> ⚠ **지터값 주의**: 평균ΔT=BAG는 견고(FPGA 페이싱 정확). 지터는 PC SW타임스탬프+배경노이즈(rustdesk/chrome)가 섞여 MAD-std로도 런마다 편차. FPGA 고유지터는 **단일 µs(≤~2µs, best 관측)** 로 추정되나 PC로는 정밀 확정 불가 → 전용 HW-timestamp 캡처(ABM/CPM) 필요.
+> ⚠ **지터값 주의**: 평균ΔT=BAG는 견고(FPGA 페이싱 정확). 지터는 PC SW타임스탬프+배경노이즈(rustdesk/chrome)가 섞여 MAD-std로도 런마다 편차. 관측 지터(측정상한)는 **단일 µs(≤~2µs, best 관측)** 로 추정되나 PC로는 정밀 확정 불가 → 전용 HW-timestamp 캡처(ABM/CPM) 필요.
 
 > KFDX `Max Jitter`(get_head)는 측정값 아닌 AFDX 스펙 상한 `Σ(Lmax+20)×8/1Gbps`. (docs/jitter_analysis.md)
 """
