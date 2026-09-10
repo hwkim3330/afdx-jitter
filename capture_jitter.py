@@ -31,6 +31,7 @@ async def board_seq(wsport, vlid, bag, length, count, repeat):
     async with websockets.connect(f"ws://localhost:{wsport}",max_size=None) as ws:
         phy=await _rpc(ws,"cd /mnt/flash && ./kfdx_app --status --phy 2>&1 | grep -E 'LINK|SPEED'")
         print("[board] PHY:", " ".join(phy.split()))
+        await _rpc(ws,f"cd /mnt/flash && ./kfdx_app --del --vlid={vlid} >/dev/null 2>&1; echo x")
         await _rpc(ws,f"cd /mnt/flash && ./kfdx_app --add --vlid={vlid} --bag={bag} --dir=tx "
                      f"--type=queueing --min=64 --max=1518 --tx_buf_size=0x100000 >/dev/null 2>&1; echo ok")
         print(f"[board] send x{repeat}  vlid={vlid} len={length} count={count} (BAG {bag}x10us={bag*10}us)")
@@ -101,7 +102,7 @@ def main():
     try: os.path.exists(a.pcap) and os.remove(a.pcap)
     except OSError: pass
     tderr=open("/tmp/afdx_td.log","wb")
-    cmd=["timeout",str(dur),"tcpdump","-i",a.dev,"-nn",
+    cmd=["taskset","-c","9","timeout",str(dur),"tcpdump","-i",a.dev,"-nn",
          "--time-stamp-precision=nano"]
     if a.hwts: cmd+=["-j","adapter_unsynced"]   # NIC PHC 원시 타임스탬프(간격측정엔 OK)
     cmd+=["-w",a.pcap]

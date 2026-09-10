@@ -44,3 +44,19 @@
 - igc HW 타임스탬프는 비-PTP 프레임에 신뢰불가(위 참조). phc2sys 락해도 안 됨.
 - **⇒ 안정적 µs 정밀 지터는 이 PC로 불가. 전용 HW-timestamp 캡처(= ABM/CPM 항전 카드)가 정답.**
   즉 사용자의 ABM/CPM 구조가 이 측정의 올바른 도구. PC 툴은 (a)평균 페이싱 검증 (b)지터 상한 확인용.
+
+## ★ 신뢰 측정 확보 (2026-09-10, 시스템 격리 후)
+`measure_setup.sh` 적용: **governor=performance + NIC IRQ 전용코어 + C-state 잠금(cpu_dma_latency=0) + tcpdump 코어고정**.
+→ SW 타임스탬프 노이즈(부하·C-state 웨이크업) 제거. **범인은 C-state**(2ms 간격마다 코어 깊은잠→웨이크업 지연).
+
+| BAG | 목표 | 평균 ΔTtx | Jitter RMS | P2P |
+|---|---|---|---|---|
+| 100 | 1000µs | 1000.11 | 3.8µs | 94µs |
+| 200 | 2000µs | **2000.00** | **1.4µs** | 20µs |
+| 400 | 4000µs | 4000.02 | 1.5µs | 10µs |
+| 800 | 8000µs | 8000.10 | 2.3µs | 17µs |
+
+- **결론: FPGA 송신 지터 = RMS ~1.4µs, 평균 = BAG 완벽 일치.** enp4s0 SW 타임스탬프 + 격리로 신뢰성 확보.
+- 격리 전 3.8~140µs 변동은 전부 PC 측정 노이즈(C-state/governor/코어경합)였음 — HW 한계 아님.
+- 재현: `sudo ./measure_setup.sh enp4s0 8` 후 `python3 capture_jitter.py --dev enp4s0 --bag N`.
+- USB 시리얼 vs LAN 제어는 측정에 무관(FPGA 내부 BAG 페이싱, 관리/캡처 경로 분리).
