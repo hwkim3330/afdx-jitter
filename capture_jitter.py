@@ -72,14 +72,14 @@ def detect_anomalies(frames, bag_us, rob_std, mad, lmax=1518):
     return dict(verdict=verdict, seq_loss=seq_loss, seq_dup=seq_dup, seq_reorder=seq_reorder,
                 rate_violation=rate_v, lmax_violation=lmax_v, outliers=outliers, frame_len_max=lensmax)
 
-def analyze(pcap, bag_us, out, lmax=1518):
+def analyze(pcap, bag_us, out, lmax=1518, vlid=None):
     from scapy.all import rdpcap
     pk=rdpcap(pcap)
     # 프레임별 (시각, SN=마지막바이트, 길이) — 캡처순
     frames=[]
     for p in pk:
         b=bytes(p)
-        if b[0:1]==b'\x03':
+        if b[0:1]==b'\x03' and (vlid is None or b[5]==vlid):
             frames.append((float(p.time), b[-1], len(b)))
     afdx=sorted(t for t,_,_ in frames)
     print(f"\n[analyze] AFDX 프레임 {len(afdx)} / 전체 {len(pk)}")
@@ -172,7 +172,7 @@ def main():
         sz=os.path.getsize(a.pcap)
     except OSError: sz=-1
     print(f"[pcap] {a.pcap} size={sz}B"); print("[tcpdump]", open("/tmp/afdx_td.log").read().strip()[-300:])
-    analyze(a.pcap, bag_us, a.out, a.lmax)
+    analyze(a.pcap, bag_us, a.out, a.lmax, a.vlid)
 
 if __name__=="__main__":
     main()
