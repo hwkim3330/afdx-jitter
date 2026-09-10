@@ -47,7 +47,7 @@ def detect_anomalies(frames, bag_us, rob_std, mad, lmax=1518):
     lensmax=max((L for _,_,L in fs), default=0)
     lmax_v=sum(1 for _,_,L in fs if L>lmax)
     med_std=rob_std or 1e9
-    prev_t=prev_sn=None
+    prev_t=prev_sn=prev_dt=None
     for t,sn,L in fs:
         if prev_t is not None:
             dt=(t-prev_t)*1e6
@@ -59,10 +59,11 @@ def detect_anomalies(frames, bag_us, rob_std, mad, lmax=1518):
                     fwd=(sn-prev_sn) if sn>prev_sn else (255-prev_sn+sn)  # 0 건너뛴 순환거리
                     if fwd>64: seq_reorder+=1          # 큰 감소/점프 = 재정렬(또는 경계)
                     elif fwd>1: seq_loss+=fwd-1        # 갭 = 손실
-                # Rate 위반: 간격이 BAG 보다 유의하게 짧음(너무 빠른 송신)
-                if dt < 0.7*bag_us: rate_v+=1
+                # Rate 위반: 짧은 간격 + 이웃과 합이 ~2×BAG 아님(=쪼개짐 노이즈 제외, 진짜 빠름만)
+                if dt < 0.7*bag_us and prev_dt is not None and (dt+prev_dt) < 1.5*bag_us: rate_v+=1
                 # 간격 이상치: |J-0| > 6*robust_std
                 if abs(dt-bag_us) > max(6*med_std, 20): outliers+=1
+        prev_dt = ((t-prev_t)*1e6) if prev_t is not None else None
         prev_t, prev_sn = t, sn
     # 판정
     if seq_loss or seq_dup or seq_reorder or lmax_v: verdict="FAULT"      # 프레임레벨(타임스탬프무관, 신뢰)
