@@ -51,14 +51,16 @@ def detect_anomalies(frames, bag_us, rob_std, mad, lmax=1518):
     for t,sn,L in fs:
         if prev_t is not None:
             dt=(t-prev_t)*1e6
-            same_burst = dt < 1.3*bag_us            # 같은 버스트(연속 송출)일 때만 판정
-            if same_burst:
-                # 시퀀스(ARINC664: 1~255 순환, 0 예약/건너뜀)
+            same_burst = dt < 1.3*bag_us            # rate/outlier용(연속 송출)
+            seq_window  = dt < 1000*bag_us          # 사실상 항상(송신경계도 SN 연속이라 오탐없음; 손실만 SN gap>1)
+            if seq_window:
+                # 시퀀스(ARINC664: 1~255 순환, 0 예약/건너뜀). 손실 프레임은 시간갭+SN갭 둘 다 생김.
                 if sn==prev_sn: seq_dup+=1
                 else:
                     fwd=(sn-prev_sn) if sn>prev_sn else (255-prev_sn+sn)  # 0 건너뛴 순환거리
                     if fwd>64: seq_reorder+=1          # 큰 감소/점프 = 재정렬(또는 경계)
                     elif fwd>1: seq_loss+=fwd-1        # 갭 = 손실
+            if same_burst:
                 # Rate 위반: 짧은 간격 + 이웃과 합이 ~2×BAG 아님(=쪼개짐 노이즈 제외, 진짜 빠름만)
                 if dt < 0.7*bag_us and prev_dt is not None and (dt+prev_dt) < 1.5*bag_us: rate_v+=1
                 # 간격 이상치: |J-0| > 6*robust_std
