@@ -137,7 +137,7 @@ async def ws_handler(ws):
                     here=os.path.dirname(os.path.abspath(__file__))
                     proc=await asyncio.create_subprocess_exec(
                         sys.executable, os.path.join(here,"capture_jitter.py"),
-                        "--dev", str(cmd.get("dev","enxc84d44263ba6")),
+                        "--dev", str(cmd.get("dev","enp4s0")),
                         "--bag", str(cmd.get("bag",200)),
                         "--len", str(cmd.get("len",17)),
                         "--count", str(cmd.get("count",2000)),

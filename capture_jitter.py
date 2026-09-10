@@ -31,7 +31,7 @@ async def board_seq(wsport, vlid, bag, length, count, repeat):
     async with websockets.connect(f"ws://localhost:{wsport}",max_size=None) as ws:
         phy=await _rpc(ws,"cd /mnt/flash && ./kfdx_app --status --phy 2>&1 | grep -E 'LINK|SPEED'")
         print("[board] PHY:", " ".join(phy.split()))
-        await _rpc(ws,f"cd /mnt/flash && ./kfdx_app --set --vlid={vlid} --bag={bag} --dir=tx "
+        await _rpc(ws,f"cd /mnt/flash && ./kfdx_app --add --vlid={vlid} --bag={bag} --dir=tx "
                      f"--type=queueing --min=64 --max=1518 --tx_buf_size=0x100000 >/dev/null 2>&1; echo ok")
         print(f"[board] send x{repeat}  vlid={vlid} len={length} count={count} (BAG {bag}x10us={bag*10}us)")
         for k in range(repeat):

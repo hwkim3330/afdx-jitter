@@ -165,7 +165,7 @@ details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:4px 0;us
   <div class="card">
     <h3>실측 지터 캡처 <span class="mut">(외부 수신 ΔTtx · J = ΔT − BAG)</span></h3>
     <div class="flex">
-      <div><label>수신 NIC</label><input id="cap_dev" value="enxc84d44263ba6" style="width:180px"></div>
+      <div><label>수신 NIC</label><input id="cap_dev" value="enp4s0" style="width:180px"></div>
       <div><label>BAG(×10µs)</label><input id="cap_bag" value="200" style="width:90px"></div>
       <div><label>repeat</label><input id="cap_rep" value="10" style="width:70px"></div>
       <button class="pri" id="b_capture">▶ 캡처 실행</button>
@@ -213,6 +213,14 @@ details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:4px 0;us
         <table id="vltbl" style="margin-top:14px"><thead><tr><th>#</th><th>VLID</th><th>BAG</th>
           <th>dir</th><th>type</th><th>MaxLen</th><th>skew</th><th>dst_port</th></tr></thead>
           <tbody><tr><td colspan="8" class="mut">get_all 로 로드</td></tr></tbody></table>
+        <h3 style="margin-top:16px">값 읽기 <span class="mut">(레지스터 / PHY)</span></h3>
+        <div class="flex">
+          <div><label>addr (hex)</label><input id="rd_addr" value="0x0" style="width:120px"></div>
+          <button id="b_readreg">read_reg</button>
+          <button id="b_readphy0">read_phy0</button>
+          <button id="b_readphy1">read_phy1</button>
+          <span class="mono" id="rd_out" style="align-self:center"></span>
+        </div>
         <h3 style="margin-top:16px">Raw 출력</h3>
         <pre id="raw">준비됨.</pre>
       </div>
@@ -279,6 +287,15 @@ $('b_get').onclick=async()=>raw(await run(`${K} --get --vlid=${$('vlid').value}`
 $('b_del').onclick=async()=>{if(confirm('VL '+$('vlid').value+' 삭제?'))raw(await run(`${K} --del --vlid=${$('vlid').value}`));};
 $('b_resetall').onclick=async()=>{if(confirm('reset_all?'))raw(await run(`${K} --reset_all`));};
 $('b_getall').onclick=loadTable;
+async function readVal(cmd){
+  const a=$('rd_addr').value; $('rd_out').textContent='읽는중…';
+  const o=await run(`${K} --${cmd} --addr=${a}`,6);
+  const m=o.match(/value:\s*([0-9A-Fa-f]+h?)/);
+  $('rd_out').textContent=`${cmd}[${a}] = ${m?m[1]:o.trim().slice(-40)}`; raw(o);
+}
+$('b_readreg').onclick=()=>readVal('read_reg');
+$('b_readphy0').onclick=()=>readVal('read_phy0');
+$('b_readphy1').onclick=()=>readVal('read_phy1');
 
 // ---- status / verdict ----
 async function refreshStatus(){

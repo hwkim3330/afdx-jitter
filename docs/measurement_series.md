@@ -29,3 +29,18 @@
 - **FPGA BAG 페이싱 실측**: 평균 2000.00µs(정확), 지터 **RMS 3.8µs / P2P 88µs**. 이게 현재 최선 측정.
 - ⚠ HW timestamp(`-j adapter_unsynced`)는 igc PHC(/dev/ptp0)가 **ptp4l/phc2sys로 규율 안 돼** 원시값이 비단조(garbage) → 못 씀. 서브-µs 측정 원하면 PHC 규율 필요(향후).
 - 배선 교훈: 리부트(내 --link_down 여파)로 **VL 소실 + TX 인터럽트 버그(#11)로 송신 정지**였던 게 "프레임 0" 원인. `rmmod→insmod→--add VL→PHY UP 대기` 로 복구.
+
+## HW timestamp 시도 결과 (2026-09-10)
+- phc2sys 로 igc PHC(/dev/ptp0)를 시스템클록에 락(offset ±1~18ns)시켜도, `-j adapter_unsynced`
+  캡처는 AFDX 프레임 간격이 scattered(median≈1ms, |J|max>1ms)로 **garbage**.
+- 원인: **igc HW RX 타임스탬프가 일반(비-PTP) 프레임엔 신뢰 불가** (all 필터 모드 불안정).
+- **결론: 커널 SW 타임스탬프(igc)가 이 용도엔 정확·안정 → RMS 3.8µs 가 정본 측정값.**
+  서브-µs가 꼭 필요하면 전용 캡처카드(HW-ts 보장) 또는 FPGA 내부 TS(정공법) 필요.
+
+## "제대로" 측정의 현실적 한계 (2026-09-10 결론)
+- **견고한 결과**: ΔTtx **평균 = BAG(2000.0µs) 정확** — 모든 런/부하에서 일정. **FPGA 페이싱 정확** 확정.
+- **지터 RMS는 PC 부하에 지배됨**: 조용할 때 ~3.8µs, 바쁠 때(chrome/rustdesk/Xorg) ~50-120µs.
+  SW 타임스탬프(커널 인터럽트)라 부하 민감. **가장 조용한 관측 3.8µs = FPGA 지터 상한(upper bound)**.
+- igc HW 타임스탬프는 비-PTP 프레임에 신뢰불가(위 참조). phc2sys 락해도 안 됨.
+- **⇒ 안정적 µs 정밀 지터는 이 PC로 불가. 전용 HW-timestamp 캡처(= ABM/CPM 항전 카드)가 정답.**
+  즉 사용자의 ABM/CPM 구조가 이 측정의 올바른 도구. PC 툴은 (a)평균 페이싱 검증 (b)지터 상한 확인용.
