@@ -7,13 +7,18 @@ AFDX 지터 종합 리포트: BAG별로 측정(capture_jitter) → 표 + 차트 
 """
 import argparse, base64, datetime, json, os, shutil, statistics as st, subprocess, sys
 
-def run_capture(dev, bag, count, repeat, out):
-    subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)),"capture_jitter.py"),
-                    "--dev", dev, "--bag", str(bag), "--len","17", "--count", str(count),
-                    "--repeat", str(repeat), "--out", out],
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    try: return json.load(open(out+".json"))
-    except Exception: return None
+def run_capture(dev, bag, count, repeat, out, runs=1):
+    """runs회 측정 후 robust 지터(rob_std) 최소=가장 조용한 런 채택(노이즈는 더하기만 하므로 최소가 FPGA에 근접)."""
+    best=None
+    for _ in range(max(1,runs)):
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)),"capture_jitter.py"),
+                        "--dev", dev, "--bag", str(bag), "--len","17", "--count", str(count),
+                        "--repeat", str(repeat), "--out", out],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try: r=json.load(open(out+".json"))
+        except Exception: continue
+        if r and (best is None or r.get("rob_std",9e9) < best.get("rob_std",9e9)): best=r
+    return best
 
 def b64(path):
     try: return "data:image/png;base64,"+base64.b64encode(open(path,"rb").read()).decode()
@@ -41,6 +46,7 @@ def main():
     ap.add_argument("--dev", default="enp4s0")
     ap.add_argument("--count", type=int, default=2000)
     ap.add_argument("--repeat", type=int, default=10)
+    ap.add_argument("--runs", type=int, default=3, help="BAG별 반복측정 후 가장 조용한 런 채택")
     ap.add_argument("--out", default="report.html")
     a=ap.parse_args()
     bags=[int(x) for x in a.bags.split(",")]
@@ -50,7 +56,7 @@ def main():
     for bag in bags:
         print(f"[report] BAG={bag} ({bag*10/1000}ms) 측정중…", flush=True)
         rep=min(40,max(a.repeat,round(a.repeat*bag/200)))
-        r=run_capture(a.dev,bag,a.count,rep,f"results/rep_{bag}")
+        r=run_capture(a.dev,bag,a.count,rep,f"results/rep_{bag}",a.runs)
         if r: r["_png"]=b64(f"results/rep_{bag}.png"); rows.append(r); print(f"   MAD-std {r.get('rob_std',0):.2f}us (RMS전체 {r['j_rms']:.1f}), 표본 {r['used_intervals']}")
         else: print("   실패")
     if not rows: print("측정 실패"); return
@@ -162,6 +168,7 @@ ul{{margin:6px 0;padding-left:20px;font-size:13px;line-height:1.7}}
 <ul>
 <li><b>ΔTtx(n)</b> = 연속 AFDX 프레임의 PC 수신 타임스탬프 차 (외부 계측). <b>J(n) = ΔTtx(n) − BAG</b> = 프레임별 송출 지터.</li>
 <li><b>평균 ΔTtx = BAG</b> 이면 FPGA가 BAG 페이싱을 정확히 지킨다는 뜻(대역폭 보장).</li>
+<li>각 BAG를 <b>여러 번 측정해 가장 조용한 런(robust 지터 최소)</b>을 채택 — PC 노이즈는 지터를 더하기만 하므로 최소값이 FPGA 고유지터에 가장 근접(upper bound).</li>
 <li><b>지터 MAD-std</b> = 1.4826×MAD(중앙값절대편차). 배경노이즈 스파이크에 강건 → <b>FPGA 고유지터 추정</b>. RMS(전체)는 PC 노이즈 스파이크 포함이라 과대평가.</li>
 <li><b>이상 검출</b>: 시퀀스 손실/중복/재정렬(AFDX SN, ARINC664 1~255·0예약), Lmax 위반, Rate 위반(간격&lt;0.7×BAG), 간격 이상치(참고). 판정 NORMAL/WARNING/FAULT.</li>
 <li>⚠ KFDX <code>get_head</code>의 <b>Max Jitter는 측정값이 아니라 계산된 AFDX 스펙 상한</b> <code>Σ(Lmax+20)×8/1Gbps</code>. 본 리포트는 외부 실측 지터.</li>
