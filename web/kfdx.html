@@ -425,6 +425,9 @@ $('b_capture').onclick=async()=>{
 function renderCapture(d){
   const st=x=>x==null?'-':(+x).toFixed(1);
   $('cap_stats').innerHTML=[
+    card('판정',d.verdict??'-','',d.verdict==='FAULT'?'err':d.verdict==='WARNING'?'warn':'hl'),
+    card('손실/Lmax위반',(d.seq_loss??0)+'/'+(d.lmax_violation??0),'',(d.seq_loss||d.lmax_violation)?'err':''),
+    card('MAD-std',st(d.rob_std),'µs','hl'),
     card('프레임',d.frames??'-',''),
     card('유효표본',d.used_intervals??'-',''),
     card('ΔTtx 평균',st(d.dt_mean),'µs','hl'),

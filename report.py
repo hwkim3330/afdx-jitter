@@ -63,7 +63,8 @@ def main():
         trs+=f"<tr><td>{int(r['bag_us']/10)}</td><td>{f(r['bag_us']/1000,3)}ms</td><td>{f(r['dt_mean'])}</td>"\
              f"<td class='{'good' if abs(err)<1 else 'warn'}'>{err:+.2f}</td>"\
              f"<td class='hl'>{f(r.get('rob_std',0))}</td><td>{f(r.get('mad',0))}</td>"\
-             f"<td>{f(r['j_rms'])}</td><td>{f(r['j_abs_max'],1)}</td><td>{f(r['p2p'],1)}</td><td>{r['used_intervals']}</td></tr>"
+             f"<td>{f(r['j_rms'])}</td><td>{f(r['j_abs_max'],1)}</td><td>{r['used_intervals']}</td>"\
+             f"<td class='v{r.get('verdict','?')}'>{r.get('verdict','?')}</td><td>{r.get('seq_loss',0)}/{r.get('lmax_violation',0)}</td></tr>"
     cards=""
     for r in rows:
         cards+=f"""<div class='card'><h3>BAG {int(r['bag_us']/10)} · {f(r['bag_us']/1000,3)}ms</h3>
