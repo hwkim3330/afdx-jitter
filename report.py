@@ -26,7 +26,7 @@ def summary_chart(rows, png):
     bags=[r["bag_us"]/1000 for r in rows]
     fig,ax=plt.subplots(1,2,figsize=(11,3.6))
     ax[0].plot(bags,[r.get("rob_std",0) for r in rows],'o-',color="#3fb950",lw=2,label="FPGA jitter (MAD-std)")
-    ax[0].plot(bags,[r["j_rms"] for r in rows],'s--',color="#e3b341",lw=1,label="RMS (전체,노이즈포함)")
+    ax[0].plot(bags,[r["j_rms"] for r in rows],'s--',color="#e3b341",lw=1,label="RMS (all,w/noise)")
     ax[0].set_xlabel("BAG [ms]"); ax[0].set_ylabel("Jitter [us]"); ax[0].set_title("Jitter vs BAG")
     ax[0].legend(fontsize=8); ax[0].grid(alpha=.3)
     err=[abs(r["dt_mean"]-r["bag_us"]) for r in rows]

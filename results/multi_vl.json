@@ -1,0 +1,35 @@
+{
+ "1": {
+  "n": 841,
+  "used": 840,
+  "dt_mean": 2000.025056657337,
+  "rob_std": 2.474355697631836,
+  "rms": 39.75613690104839,
+  "verdict": "NORMAL",
+  "seq_loss": 0,
+  "lmax_violation": 0,
+  "rate_violation": 0
+ },
+ "2": {
+  "n": 789,
+  "used": 788,
+  "dt_mean": 2000.022660657234,
+  "rob_std": 1.4139175415039062,
+  "rms": 21.68199810495049,
+  "verdict": "NORMAL",
+  "seq_loss": 0,
+  "lmax_violation": 0,
+  "rate_violation": 0
+ },
+ "3": {
+  "n": 737,
+  "used": 736,
+  "dt_mean": 2000.02186972162,
+  "rob_std": 1.4139175415039062,
+  "rms": 20.971616951887476,
+  "verdict": "NORMAL",
+  "seq_loss": 0,
+  "lmax_violation": 0,
+  "rate_violation": 0
+ }
+}

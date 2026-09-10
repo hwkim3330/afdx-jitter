@@ -69,3 +69,17 @@ capture_jitter가 프레임별로 검출 → VL 판정(NORMAL/WARNING/FAULT):
 - **간격 이상치**: |ΔT−BAG| > 6×MAD-std → 참고(PC 측정노이즈 포함, 판정 미반영).
 - **판정**: 프레임레벨(시퀀스/Lmax)만 FAULT 좌우(신뢰), Rate→WARNING, 간격이상치는 참고.
 - 검증: 정상=NORMAL, 1518B+`--lmax 512`=FAULT(Lmax위반 전건). report/GUI에 판정 표시.
+
+## 다중 VL 경쟁 테스트 (2026-09-10)
+`multi_vl_test.py` — 여러 VL 동시 송신, dst MAC 끝바이트(=VLID)로 분리해 VL별 지터/판정.
+3 VL(1,2,3) 동시, BAG=200(2ms) 결과:
+
+| VL | 프레임 | 평균ΔT | 지터 MAD-std | 판정 | 손실/Lmax |
+|---|---|---|---|---|---|
+| 1 | 841 | 2000.0µs | 2.47µs | NORMAL | 0/0 |
+| 2 | 789 | 2000.0µs | 1.41µs | NORMAL | 0/0 |
+| 3 | 737 | 2000.0µs | 1.41µs | NORMAL | 0/0 |
+
+- **AFDX 핵심 보장 실증**: 3 VL 경쟁에도 **각 VL이 BAG(2ms)를 정확히 유지**(per-VL 대역폭 격리),
+  지터 증가 없음(1.4~2.5µs), 손실 0. FPGA 스케줄러가 VL별 BAG를 올바르게 보장.
+- 더 강한 경쟁(작은 BAG/대형 프레임/많은 VL)은 `--vls`/`--bag`/`--len`로 확장 가능.
