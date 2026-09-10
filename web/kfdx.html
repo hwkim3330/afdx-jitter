@@ -179,7 +179,7 @@ details summary{cursor:pointer;color:var(--blue);font-size:12px;padding:4px 0;us
       <div><canvas id="cCapHist" height="170"></canvas>
         <div class="legend"><span><i style="background:#58a6ff"></i>J=ΔT−BAG 분포</span></div></div>
     </div>
-    <div class="mut" style="margin-top:8px">⚠ USB NIC은 SW 타임스탬프라 ±수백µs 노이즈. 정밀 측정은 HW 타임스탬프 NIC(i225/i226) 필요.</div>
+    <div class="mut" style="margin-top:8px">⚠ 정밀 측정하려면 <code>sudo ./measure_setup.sh enp4s0 8</code> (C-state/governor/IRQ 격리) → RMS ~1.4µs. 미적용 시 PC 부하따라 4~140µs로 튐.</div>
   </div>
 
   <div class="card">
