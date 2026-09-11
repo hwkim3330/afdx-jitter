@@ -1,6 +1,8 @@
 # NEXT_ACTION — AFDX 지터 측정·이상검출 (2026-09-10 기준)
 
 > **★ 2026-09-11 업데이트 — HW 타임스탬프 부활**: 아래 "2. B" 의 "FPGA 지터 측정 불가"는 **집계 송신 지터 수준에서 해소됨**. igc RX 필터를 ALL로 강제(`hwts_jitter.py`)하니 PC-노이즈 면역 **FPGA 송신 지터 = RMS 112ns / P2P 238ns** 확정. 단 FPGA **내부 단계별**(Timestamp A/B) 분리는 여전히 RTL 필요(D/E 유효). 상세: `docs/measurement_series.md` 최하단, `PROBLEMS.md`.
+> **★ 2026-09-11 추가 진행**: 우선순위 3(FPGA 내부 TS 명세) → `docs/timestamp_spec.md` **초안 완료**(HW팀 전달가능). 우선순위 1(다중 VL) → `multi_vl_hw.py` **본체 준비 완료**(전원 복구 후 즉시 실행). 구조분석 `docs/fpga_structure.md`. 통합 GUI(테슬라 콕핏) `web/index.html`.
+
 
 
 ## 핵심 결정 (먼저)
