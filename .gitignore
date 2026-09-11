@@ -8,3 +8,4 @@ scratchpad/
 # capture outputs
 *.pcap
 results_run.*
+web/ptp_data.json

@@ -1,0 +1,60 @@
+<!doctype html><html lang=ko><head><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1"><title>Linux PTP Monitor</title>
+<style>
+:root{--bg:#0a0e13;--panel:#131a22;--edge:#22303f;--fg:#e6f0fa;--mut:#8095a8;--g:#3fb950;--b:#58a6ff;--w:#e3b341;--r:#f85149}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 ui-monospace,Menlo,Consolas,monospace}
+header{padding:12px 18px;background:var(--panel);border-bottom:1px solid var(--edge);display:flex;gap:14px;align-items:center}
+header b{font-size:16px;letter-spacing:.4px}.dot{width:10px;height:10px;border-radius:50%;background:var(--w);box-shadow:0 0 8px currentColor;transition:.3s}
+.dot.lock{background:var(--g)}.wrap{max-width:1000px;margin:0 auto;padding:18px}.grow{flex:1}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px 14px}
+.card .k{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}.card .v{font-size:24px;font-weight:700;margin-top:4px}
+.card .u{font-size:11px;color:var(--mut);font-weight:400}canvas{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:10px;display:block;margin-bottom:14px}
+h3{color:var(--b);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px}
+.mut{color:var(--mut);font-size:12px;line-height:1.6}a.nav{color:var(--mut);text-decoration:none;font-size:12px;border:1px solid var(--edge);border-radius:6px;padding:4px 9px}a.nav:hover{color:var(--fg);border-color:var(--g)}</style></head><body>
+<header><span class="dot" id=dot></span><b>Linux PTP Monitor</b>
+<span class=mut id=sub>enp4s0 PHC (/dev/ptp0) ↔ 시스템클록 · phc2sys 서보</span>
+<span class=grow></span><span class=mut id=upd></span><a class=nav href="/">▤ 콘솔</a><a class=nav href="/kfdx.html">KFDX</a></header>
+<div class=wrap>
+<div class=cards id=cards></div>
+<h3>Offset (ns) — 0에 수렴 = lock (s2)</h3><canvas id=cOff height=180></canvas>
+<h3>Frequency 조정 (ppb)</h3><canvas id=cFreq height=140></canvas>
+<div class=mut>PHC 서보가 하드웨어 PTP 클록(/dev/ptp0)을 시스템 시간에 실시간 동기. state <b>s2 = locked</b>, offset이 0 근처로 수렴.
+<br>⚠ 보드 kfdx PTP는 AFDX 인캡슐이라 표준 ptp4l과 상호운용 안 됨 → 이건 <b>PC 자체 Linux PTP(HW clock servo)</b> 데모. 데이터: <code>/ptp_data.json</code> (phc_logger.py)</div>
+</div>
+<script>
+let H=[];
+async function poll(){
+  try{const r=await fetch('/ptp_data.json?_='+Date.now());H=await r.json();render();}
+  catch(e){document.getElementById('upd').textContent='데이터 대기…';}
+}
+function render(){
+  if(!H||!H.length)return;
+  const last=H[H.length-1];
+  document.getElementById('dot').classList.toggle('lock',last.state>=2);
+  document.getElementById('upd').textContent='갱신 '+new Date().toLocaleTimeString();
+  const c=[['offset',last.offset_ns,'ns',Math.abs(last.offset_ns)<1000?'var(--g)':'var(--w)'],
+    ['freq',last.freq_ppb,'ppb','var(--fg)'],['path delay',last.delay_ns,'ns','var(--fg)'],
+    ['state','s'+last.state,'',last.state>=2?'var(--g)':'var(--w)'],['샘플',H.length,'','var(--fg)']];
+  document.getElementById('cards').innerHTML=c.map(x=>
+    `<div class=card><div class=k>${x[0]}</div><div class=v style="color:${x[3]}">${x[1]}<span class=u> ${x[2]}</span></div></div>`).join('');
+  draw('cOff',H.map(x=>x.offset_ns),'#3fb950',true);
+  draw('cFreq',H.map(x=>x.freq_ppb),'#58a6ff',false);
+}
+function draw(id,vs,col,zero){
+  const cv=document.getElementById(id);cv.width=cv.clientWidth;const cx=cv.getContext('2d'),W=cv.width,H2=cv.height,p=40;
+  cx.clearRect(0,0,W,H2);if(!vs.length)return;
+  let mn=Math.min(...vs),mx=Math.max(...vs);if(zero){mx=Math.max(mx,Math.abs(mn),10);mn=-mx;}
+  if(mn===mx){mn-=1;mx+=1;}const Y=v=>p+(H2-2*p)*(1-(v-mn)/(mx-mn));
+  cx.strokeStyle='#22303f';cx.fillStyle='#8095a8';cx.font='10px monospace';
+  for(let i=0;i<=4;i++){const y=p+(H2-2*p)*i/4;cx.beginPath();cx.moveTo(p,y);cx.lineTo(W-6,y);cx.stroke();
+    cx.fillText(Math.round(mx-(mx-mn)*i/4),3,y+3);}
+  if(zero){cx.strokeStyle='#f85149';cx.setLineDash([4,3]);cx.beginPath();cx.moveTo(p,Y(0));cx.lineTo(W-6,Y(0));cx.stroke();cx.setLineDash([]);}
+  cx.strokeStyle=col;cx.lineWidth=1.8;cx.beginPath();
+  vs.forEach((v,i)=>{const x=p+(W-p-6)*i/Math.max(1,vs.length-1);i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});
+  cx.stroke();
+  const lx=W-6,ly=Y(vs[vs.length-1]);cx.fillStyle=col;cx.beginPath();cx.arc(lx,ly,3,0,7);cx.fill();
+}
+setInterval(poll,1000);poll();
+window.addEventListener('resize',render);
+</script></body></html>
