@@ -338,6 +338,35 @@ a.live{color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1p
     </div>
   </section>
 
+  <!-- QUANTUM MICROSTRUCTURE -->
+  <section>
+    <h2>지터 미시구조 — 랜덤이 아니다</h2>
+    <h3>간격은 딱 두 값, 240 ns 격자 위에서만 움직인다</h3>
+    <p>HW 타임스탬프를 ns 단위로 분해하니, BAG 2 ms에서 프레임 간격이 <b>연속 분포가 아니라 정확히 두 값</b>(2000093 ns·1999855 ns)만 취한다. 그 사이 간격은 <b>238 ns</b>. 전 BAG에서 이 양자는 <b>240 ns로 일정</b>하고, 두 값의 비율만 바뀐다 — 즉 지터는 확률적 노이즈가 아니라 <b>결정론적 양자화</b>다.</p>
+    <div class="chartbox">
+      <svg viewBox="0 0 620 210" role="img" aria-label="BAG 2ms 간격 지터의 2레벨 분포">
+        <line x1="60" y1="170" x2="580" y2="170" class="svg-grid"/>
+        <!-- 0 marker -->
+        <line x1="385" y1="44" x2="385" y2="170" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>
+        <text class="svg-ax" x="385" y="40" text-anchor="middle" style="fill:var(--accent)">평균</text>
+        <!-- bars: -170ns(30.4%) and +70ns(69.6%) -->
+        <rect x="144" y="122" width="40" height="48" rx="3" fill="var(--good)"/>
+        <text class="svg-val" x="164" y="114" text-anchor="middle" fill="var(--good)">30.4%</text>
+        <text class="svg-ax" x="164" y="186" text-anchor="middle">−170 ns</text>
+        <rect x="456" y="60" width="40" height="110" rx="3" fill="var(--good)"/>
+        <text class="svg-val" x="476" y="52" text-anchor="middle" fill="var(--good)">69.6%</text>
+        <text class="svg-ax" x="476" y="186" text-anchor="middle">+70 ns</text>
+        <!-- 240ns bracket -->
+        <line x1="184" y1="140" x2="456" y2="140" stroke="var(--amber)" stroke-width="1.4"/>
+        <line x1="184" y1="134" x2="184" y2="146" stroke="var(--amber)" stroke-width="1.4"/>
+        <line x1="456" y1="134" x2="456" y2="146" stroke="var(--amber)" stroke-width="1.4"/>
+        <text class="svg-val" x="320" y="134" text-anchor="middle" fill="var(--amber)">양자 240 ns = 72 × (1/300 MHz)</text>
+      </svg>
+      <div class="cap">보드 디바이스트리 <span class="mono">clk=299970000</span>(300 MHz 인터페이스 클록)이 방증 — 240 ns는 정확히 그 <b>72 클록</b>이다. FPGA BAG 스케줄러가 240 ns 격자로 틱하고, AFDX BAG 단위(10 µs = 41.67 × 240 ns)가 정수배가 아니라 프레임 릴리스가 인접 격자점 ±1 양자로 진동한다.</div>
+    </div>
+    <p class="cap"><b>의미:</b> FPGA 페이싱 지터는 BAG와 무관하게 <b>최악 ±240 ns로 유계</b>(랜덤 누적 없음) — AFDX 실시간성 관점에서 이상적이며, Max Jitter 예산(µs~수십 µs) 대비 크게 여유롭다. 분석 도구 <span class="mono">quantum_analysis.py</span>.</p>
+  </section>
+
   <!-- COMPARISON TABLE -->
   <section>
     <h2>측정 방법 대조 (BAG 2 ms)</h2>

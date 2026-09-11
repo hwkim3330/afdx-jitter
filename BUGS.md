@@ -19,6 +19,7 @@
 | B12 | [도구] | ptp_web.py 포트 충돌(8090/91/92/9099 Address in use) | 별도 HTTP 서버 중복 | ✅ | `phc_logger.py`(phc2sys 파싱→JSON) + 브리지 정적서빙으로 대체 |
 | B13 | [도구] | `pkill -f <pat>` 가 자기 셸까지 죽임(exit 144) | 패턴 자기참조 | ✅ | 명시적 PID 타깃 |
 | B14 | [HW] | FPGA 내부 단계별 지터(Timestamp A=scheduler, B=MAC TX) 분리 불가 | 내부 타임스탬프 미노출 | 🔬 | **구조적 한계**(버그 아님). fault localization "어느 파이프라인 단계"는 RTL 추가 필요 → NEXT_ACTION E |
+| B15 | [HW] | `/proc/kfdx` 를 read 하면 커널 `Bad page map`(page fault, 프로세스 taint) | proc 핸들러가 잘못된 페이지 매핑 노출 | ⏳ | **읽지 말 것**(진단은 dmesg/kfdx_app 로). 수정버전 확인 대상 |
 
 ## 수정버전 도착 시 재확인 우선순위
 1. **B04** (TX 인터럽트 정지) — 데모 안정성 직결. 수정됐는지 최우선 확인.
