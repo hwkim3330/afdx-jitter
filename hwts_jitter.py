@@ -51,6 +51,22 @@ def capture_frames(iface, vlid, dur):
         fr.append((hw, sw, data[-1], len(data)))
     s.close(); return fr
 
+def capture_frames_vl(iface, dur):
+    """모든 AFDX VL 캡처 → (hw_ts, vlid=dst[5], sn, len). 다중 VL 분리용."""
+    s=socket.socket(socket.AF_PACKET,socket.SOCK_RAW,socket.htons(ETH_P_ALL))
+    s.bind((iface,0)); s.setsockopt(socket.SOL_SOCKET,SO_TIMESTAMPING,SOF); s.settimeout(dur)
+    fr=[]; t0=time.time()
+    while time.time()-t0<dur:
+        try: data,anc,_,_=s.recvmsg(2048,1024)
+        except socket.timeout: break
+        if len(data)<14 or data[0]!=0x03: continue
+        hw=0.0
+        for lvl,typ,cd in anc:
+            if lvl==socket.SOL_SOCKET and typ==SCM_TIMESTAMPING:
+                v=struct.unpack("qqqqqq",cd[:48]); hw=v[4]+v[5]*1e-9
+        fr.append((hw, data[5], data[-1], len(data)))
+    s.close(); return fr
+
 def capture(iface, vlid, dur):
     fr=capture_frames(iface,vlid,dur)
     return [f[0] for f in fr if f[0]>0], [f[1] for f in fr if f[1]>0]
@@ -80,8 +96,12 @@ if __name__=="__main__":
     ap.add_argument("--iface",default="enp4s0"); ap.add_argument("--vlid",type=int,default=1)
     ap.add_argument("--bag-us",type=float,default=2000); ap.add_argument("--dur",type=float,default=8)
     ap.add_argument("--out",default=None); ap.add_argument("--dump",default=None,help="프레임 (hw,sw,sn,len) JSON 덤프")
+    ap.add_argument("--dump-vl",default=None,help="모든 VL 프레임 (hw,vlid,sn,len) 덤프(다중 VL용)")
     a=ap.parse_args()
     if not set_filter_all(a.iface): print("경고: rx-filter ALL 설정 실패(권한/드라이버)")
+    if a.dump_vl:
+        fr=capture_frames_vl(a.iface,a.dur)
+        json.dump(fr,open(a.dump_vl,"w")); print("dumped",len(fr),"frames(all VL) →",a.dump_vl); raise SystemExit
     fr=capture_frames(a.iface,a.vlid,a.dur)
     hw=[f[0] for f in fr if f[0]>0]; sw=[f[1] for f in fr if f[1]>0]
     r=dict(iface=a.iface,vlid=a.vlid,bag_us=a.bag_us,ts=round(time.time()),
