@@ -1,0 +1,26 @@
+[
+ {
+  "scenario": "S0 \uc815\uc0c1",
+  "pass": true
+ },
+ {
+  "scenario": "S1 Lmax\ucd08\uacfc",
+  "pass": true
+ },
+ {
+  "scenario": "S2 Rate\uc704\ubc18",
+  "pass": true
+ },
+ {
+  "scenario": "S3 \uc2dc\ud000\uc2a4\uc190\uc2e4",
+  "pass": true
+ },
+ {
+  "scenario": "S4 \uc798\ubabb\ub41cVLID",
+  "pass": true
+ },
+ {
+  "scenario": "S5 \ubcf5\uad6c",
+  "pass": true
+ }
+]
