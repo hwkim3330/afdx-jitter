@@ -1,112 +1,128 @@
 <!doctype html><html lang=ko><head><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1">
-<title>KFDX AFDX 콘솔</title>
+<title>KFDX AFDX 콕핏</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
+/* ---- Tesla cockpit: dark, minimal, high-contrast ---- */
 :root{
-  --ground:#eef1f4;--panel:#fff;--panel2:#f6f8fa;--edge:#d7dee5;--edge2:#e6ebf0;
-  --ink:#17222e;--ink2:#3a4a59;--mut:#657686;--faint:#8a99a8;
-  --accent:#0e7f88;--accent2:#0aa2ac;--amber:#b9741a;
-  --good:#2e9e5b;--warn:#c1901c;--crit:#cf4a5c;--swtrace:#b06a2a;
-  --shadow:0 1px 2px rgba(20,35,50,.05),0 6px 20px rgba(20,35,50,.06);
-}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --ground:#0b131c;--panel:#111c28;--panel2:#0e1822;--edge:#243546;--edge2:#1b2837;
-  --ink:#e7eef5;--ink2:#c0cddb;--mut:#8598aa;--faint:#5f7284;
-  --accent:#2bb6bf;--accent2:#38cdd6;--amber:#e0a34a;
-  --good:#3fbf72;--warn:#dcae3e;--crit:#e56377;--swtrace:#d38b45;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.35);
-}}
-:root[data-theme="dark"]{
-  --ground:#0b131c;--panel:#111c28;--panel2:#0e1822;--edge:#243546;--edge2:#1b2837;
-  --ink:#e7eef5;--ink2:#c0cddb;--mut:#8598aa;--faint:#5f7284;
-  --accent:#2bb6bf;--accent2:#38cdd6;--amber:#e0a34a;
-  --good:#3fbf72;--warn:#dcae3e;--crit:#e56377;--swtrace:#d38b45;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.35);
+  --bg:#0c0d0f; --bg2:#151619; --bg3:#1c1e22; --elev:#212429;
+  --line:#2a2e35; --line2:#20242a;
+  --txt:#f5f6f8; --txt2:#a2a8b2; --txt3:#6a7178;
+  --blue:#3a9dff; --cyan:#28d7e6; --red:#e82127; --green:#34d17a; --amber:#f2b03c;
+  --glow:0 0 24px rgba(58,157,255,.18);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--ground);color:var(--ink);
-  font:400 14px/1.55 "IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+html,body{margin:0}
+body{background:
+   radial-gradient(1200px 600px at 50% -10%, rgba(58,157,255,.07), transparent 60%),
+   var(--bg);
+  color:var(--txt);font:400 14px/1.5 "Sora",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;min-height:100vh}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
 /* topbar */
-header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--edge);
-  display:flex;align-items:center;gap:14px;padding:11px 18px;flex-wrap:wrap}
-header .brand{font-weight:700;font-size:16px;letter-spacing:.2px}
-header .sub{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint)}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:16px;
+  padding:12px 22px;background:rgba(12,13,15,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line2)}
+.logo{display:flex;align-items:center;gap:11px}
+.mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--cyan));
+  box-shadow:var(--glow);position:relative;flex:none}
+.mark:after{content:"";position:absolute;inset:6px;border:2px solid #0c0d0f;border-radius:3px}
+.logo b{font-weight:600;font-size:15px;letter-spacing:.06em}
+.logo span{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--txt3);letter-spacing:.08em;display:block;margin-top:1px}
 .spacer{flex:1}
-.chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-family:"IBM Plex Mono",monospace;
-  background:var(--panel2);border:1px solid var(--edge);border-radius:999px;padding:4px 11px;color:var(--ink2)}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--faint);transition:.3s}
-.dot.on{background:var(--good);box-shadow:0 0 7px var(--good)}
-.dot.bad{background:var(--crit)} .dot.warnc{background:var(--warn)}
-/* tabs */
-nav{position:sticky;top:49px;z-index:19;display:flex;gap:2px;background:var(--panel);
-  border-bottom:1px solid var(--edge);padding:0 12px;overflow-x:auto}
-nav button{background:none;border:none;border-bottom:2px solid transparent;color:var(--mut);
-  font:600 13.5px "IBM Plex Sans";padding:11px 15px;cursor:pointer;white-space:nowrap}
-nav button:hover{color:var(--ink)}
-nav button.on{color:var(--accent);border-bottom-color:var(--accent)}
-main{max-width:1000px;margin:0 auto;padding:20px 18px 60px}
-h2{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--mut);margin:0 0 12px;font-weight:600}
-h3{font-size:16px;margin:0 0 8px;font-weight:600}
-p{color:var(--ink2);margin:0 0 10px;max-width:70ch}
+.chip{display:inline-flex;align-items:center;gap:8px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+  color:var(--txt2);background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--txt3);transition:.3s;flex:none}
+.dot.on{background:var(--green);box-shadow:0 0 9px var(--green)}
+.dot.bad{background:var(--red);box-shadow:0 0 9px var(--red)}
+.dot.warnc{background:var(--amber);box-shadow:0 0 9px var(--amber)}
+/* nav */
+nav{position:sticky;top:52px;z-index:19;display:flex;gap:4px;padding:8px 16px;
+  background:rgba(12,13,15,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line2);overflow-x:auto}
+nav button{background:none;border:1px solid transparent;color:var(--txt3);font:500 13px "Sora";
+  padding:8px 16px;border-radius:9px;cursor:pointer;white-space:nowrap;letter-spacing:.02em;transition:.15s}
+nav button:hover{color:var(--txt);background:var(--bg2)}
+nav button.on{color:var(--txt);background:var(--bg3);border-color:var(--line)}
+main{max-width:1040px;margin:0 auto;padding:26px 18px 80px}
+h2{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--txt3);margin:0 0 15px;font-weight:600}
+h3{font-size:15px;margin:0 0 8px;font-weight:500;letter-spacing:.01em}
+p{color:var(--txt2);margin:0 0 10px;max-width:72ch}
 section[hidden]{display:none}
+/* ---- hero instrument cluster ---- */
+.cluster{background:
+   radial-gradient(600px 300px at 50% 0%, rgba(58,157,255,.10), transparent 70%),
+   linear-gradient(180deg,var(--bg3),var(--bg2));
+  border:1px solid var(--line);border-radius:22px;padding:30px 26px 26px;margin-bottom:20px;
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px}
+.gauge{position:relative;width:230px;height:230px;margin:0 auto}
+.gauge svg{width:100%;height:100%;transform:rotate(135deg)}
+.gauge .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge .big{font-weight:300;font-size:56px;line-height:1;letter-spacing:-.02em;color:#fff}
+.gauge .big small{font-size:.36em;color:var(--txt2);font-weight:400;letter-spacing:0}
+.gauge .lbl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-top:8px}
+.gauge .bud{font-size:11px;color:var(--txt3);margin-top:4px}
+.side{display:flex;flex-direction:column;gap:18px}
+.side.r{align-items:flex-end;text-align:right}
+.rd .k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt3)}
+.rd .v{font-weight:300;font-size:30px;line-height:1.05;margin-top:3px}
+.rd .v small{font-size:.42em;color:var(--txt2);font-weight:400}
+.rd .v.g{color:var(--green)} .rd .v.b{color:var(--blue)} .rd .v.a{color:var(--amber)}
+@media(max-width:760px){.cluster{grid-template-columns:1fr;text-align:center}.side,.side.r{align-items:center;text-align:center}}
 /* cards */
-.grid{display:grid;gap:13px}
-.g4{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
-.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.card{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:16px 17px;box-shadow:var(--shadow)}
-.stat .k{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
-.stat .v{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:27px;margin-top:5px}
-.stat .v.ok{color:var(--good)} .stat .v.ac{color:var(--accent)} .stat .v.am{color:var(--amber)}
-.stat .u{font-size:12px;color:var(--faint);margin-top:2px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:18px 19px}
+.card.elev{background:linear-gradient(180deg,var(--bg3),var(--bg2))}
+.st .k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3)}
+.st .v{font-weight:300;font-size:26px;margin-top:6px}
+.st .v.g{color:var(--green)}.st .v.b{color:var(--blue)}.st .v.a{color:var(--amber)}
+.st .u{font-size:11.5px;color:var(--txt3);margin-top:3px}
+.rowb{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line2)}
+.rowb:last-child{border-bottom:0}.rowb .l{color:var(--txt3);font-size:12.5px}.rowb .r{font-family:"IBM Plex Mono",monospace;font-size:13px}
 /* buttons */
-button.act{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:9px 16px;
-  font:600 13.5px "IBM Plex Sans";cursor:pointer}
-button.act:hover{background:var(--accent2)} button.act:disabled{opacity:.5;cursor:default}
-button.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--edge);border-radius:8px;
-  padding:8px 13px;font:500 13px "IBM Plex Sans";cursor:pointer}
-button.ghost:hover{border-color:var(--accent)}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-label{font-size:12px;color:var(--mut)}
-input,select{background:var(--panel2);color:var(--ink);border:1px solid var(--edge);border-radius:7px;
-  padding:7px 9px;font:inherit;font-size:13px;width:90px}
-/* badge */
-.badge{display:inline-flex;align-items:center;gap:7px;border:1.5px solid;border-radius:20px;padding:4px 13px;font-weight:700;font-size:13px}
-.vNORMAL{color:var(--good);border-color:var(--good)} .vWARNING{color:var(--warn);border-color:var(--warn)} .vFAULT{color:var(--crit);border-color:var(--crit)}
-/* table */
-.tblbox{overflow-x:auto;border:1px solid var(--edge);border-radius:11px;background:var(--panel)}
-table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
-th,td{text-align:left;padding:10px 13px;border-bottom:1px solid var(--edge2)}
-th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);font-weight:600;background:var(--panel2)}
+button.act{background:linear-gradient(180deg,var(--blue),#2b7fe0);color:#fff;border:none;border-radius:11px;
+  padding:11px 20px;font:600 13.5px "Sora";cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(58,157,255,.28)}
+button.act:hover{filter:brightness(1.08)}button.act:disabled{opacity:.45;cursor:default;box-shadow:none}
+button.ghost{background:var(--bg3);color:var(--txt);border:1px solid var(--line);border-radius:11px;
+  padding:9px 15px;font:500 13px "Sora";cursor:pointer;transition:.15s}
+button.ghost:hover{border-color:var(--blue);color:#fff}
+.row{display:flex;gap:11px;align-items:center;flex-wrap:wrap}
+label{font-size:11px;color:var(--txt3);font-family:"IBM Plex Mono",monospace;letter-spacing:.05em}
+input{background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font:inherit;font-size:13px;width:96px}
+input:focus{outline:none;border-color:var(--blue)}
+.badge{display:inline-flex;align-items:center;gap:7px;border:1.5px solid;border-radius:999px;padding:5px 14px;font-weight:600;font-size:12.5px}
+.vNORMAL{color:var(--green);border-color:var(--green)}.vWARNING{color:var(--amber);border-color:var(--amber)}.vFAULT{color:var(--red);border-color:var(--red)}
+.tblbox{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--bg2)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:540px}
+th,td{text-align:left;padding:11px 15px;border-bottom:1px solid var(--line2)}
+th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);font-weight:500;background:var(--bg3)}
 td.num,th.num{text-align:right;font-family:"IBM Plex Mono",monospace}
 tr:last-child td{border-bottom:0}
-canvas{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:11px;display:block;margin-bottom:12px}
-.pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;background:var(--panel);border:1px solid var(--edge);border-radius:9px;padding:7px 12px}
-.pill .d{width:8px;height:8px;border-radius:50%;background:var(--good)}
-.pills{display:flex;flex-wrap:wrap;gap:8px}
-iframe{width:100%;height:72vh;border:1px solid var(--edge);border-radius:11px;background:var(--panel)}
-a.lnk{color:var(--accent);text-decoration:none;font-weight:500}
-.cap{font-size:12.5px;color:var(--mut);margin-top:10px}
-.term{background:#0b0f14;border:1px solid var(--edge);border-radius:10px;padding:12px;height:44vh;overflow:auto;
-  font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:#cfe3f5;white-space:pre-wrap;word-break:break-all}
-.muted{color:var(--faint);font-size:12px}
+canvas{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:14px;display:block;margin-bottom:14px}
+.pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:8px 13px}
+.pill .d{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
+.pills{display:flex;flex-wrap:wrap;gap:9px}
+iframe{width:100%;height:72vh;border:1px solid var(--line);border-radius:14px;background:#fff}
+a.lnk{color:var(--blue);text-decoration:none;font-weight:500}a.lnk:hover{color:var(--cyan)}
+.cap{font-size:12px;color:var(--txt3);margin-top:11px;line-height:1.6}
+.term{background:#08090b;border:1px solid var(--line);border-radius:12px;padding:14px;height:44vh;overflow:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:#c9f0e6;white-space:pre-wrap;word-break:break-all}
+.muted{color:var(--txt3);font-size:12px}
 </style></head><body>
 
 <header>
-  <span class="dot" id="wsdot"></span>
-  <span class="brand">KFDX AFDX 콘솔</span>
-  <span class="sub">T2080RDB · KETI FPGA AFDX NIC</span>
+  <div class="logo"><span class="mark"></span><div><b>KFDX AFDX 콕핏</b><span>T2080RDB · KETI FPGA AFDX NIC</span></div></div>
   <span class="spacer"></span>
-  <span class="chip"><span class="dot" id="boarddot"></span>보드 <span id="boardtxt">확인중</span></span>
+  <span class="chip"><span class="dot" id="wsdot"></span>LINK</span>
+  <span class="chip"><span class="dot" id="boarddot"></span>보드 <span id="boardtxt">–</span></span>
   <span class="chip"><span class="dot" id="ptpdot"></span>PTP <span id="ptptxt">–</span></span>
-  <button class="ghost" id="themebtn" title="테마" style="padding:5px 10px">◐</button>
 </header>
 
 <nav id="tabs">
-  <button data-t="dash" class="on">대시보드</button>
+  <button data-t="dash" class="on">콕핏</button>
   <button data-t="meas">측정</button>
   <button data-t="con">콘솔</button>
   <button data-t="ptp">PTP</button>
@@ -114,33 +130,49 @@ a.lnk{color:var(--accent);text-decoration:none;font-weight:500}
 </nav>
 
 <main>
-  <!-- DASHBOARD -->
+  <!-- COCKPIT -->
   <section id="dash">
-    <h2>확정 결과 — 2026-09-11</h2>
-    <div class="grid g4" style="margin-bottom:18px">
-      <div class="card stat"><div class="k">FPGA 송신 지터 (HW)</div><div class="v am">112<span class="u"> ns RMS</span></div><div class="u">P2P 238 ns · 참지터 ~110 ns</div></div>
-      <div class="card stat"><div class="k">페이싱 양자</div><div class="v ac">240<span class="u"> ns</span></div><div class="u">결정론적 2레벨 · 300MHz/72</div></div>
-      <div class="card stat"><div class="k">이상 검출</div><div class="v ok">6/6 · 10/10</div><div class="u">라이브 · 오프라인 PASS</div></div>
-      <div class="card stat"><div class="k">클록 오프셋</div><div class="v">+10.4<span class="u"> ppm</span></div><div class="u">FPGA↔PC · HW보정 불필요</div></div>
+    <div class="cluster">
+      <div class="side">
+        <div class="rd"><div class="k">페이싱 양자</div><div class="v b">240<small> ns</small></div></div>
+        <div class="rd"><div class="k">클록 오프셋</div><div class="v">+10.4<small> ppm</small></div></div>
+      </div>
+      <div class="gauge">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#22262d" stroke-width="6" stroke-dasharray="198 264" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="url(#g)" stroke-width="6" stroke-dasharray="6 264" stroke-linecap="round"/>
+          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#28d7e6"/><stop offset="1" stop-color="#3a9dff"/></linearGradient></defs>
+        </svg>
+        <div class="ctr">
+          <div class="big">112<small> ns</small></div>
+          <div class="lbl">FPGA 송신 지터</div>
+          <div class="bud">예산 대비 ≈ 1% · P2P 238 ns</div>
+        </div>
+      </div>
+      <div class="side r">
+        <div class="rd"><div class="k">이상 검출</div><div class="v g">6/6</div></div>
+        <div class="rd"><div class="k">측정 방식</div><div class="v" style="font-size:20px">HW ts<small> 필터 ALL</small></div></div>
+      </div>
     </div>
+
     <div class="grid g2">
-      <div class="card">
-        <h3>실시간 상태</h3>
-        <div class="row" style="justify-content:space-between"><span class="muted">브리지 WS</span><span id="d_ws" class="mono">–</span></div>
-        <div class="row" style="justify-content:space-between;margin-top:7px"><span class="muted">보드 시리얼</span><span id="d_board" class="mono">–</span></div>
-        <div class="row" style="justify-content:space-between;margin-top:7px"><span class="muted">PTP 서보 (enp4s0)</span><span id="d_ptp" class="mono">–</span></div>
-        <div class="row" style="margin-top:13px"><button class="ghost" id="d_refresh">↻ 보드 상태 확인</button></div>
+      <div class="card elev">
+        <h3>시스템 상태</h3>
+        <div class="rowb"><span class="l">브리지 LINK</span><span class="r" id="d_ws">–</span></div>
+        <div class="rowb"><span class="l">보드 시리얼</span><span class="r" id="d_board">–</span></div>
+        <div class="rowb"><span class="l">PTP 서보 (enp4s0)</span><span class="r" id="d_ptp">–</span></div>
+        <div class="row" style="margin-top:15px"><button class="ghost" id="d_refresh">↻ 보드 상태</button></div>
         <div class="cap" id="d_note"></div>
       </div>
-      <div class="card">
-        <h3>바로가기</h3>
-        <div class="pills">
+      <div class="card elev">
+        <h3>빠른 실행</h3>
+        <div class="pills" style="margin-bottom:14px">
           <button class="ghost" onclick="go('meas')">▶ 지터 캡처</button>
-          <button class="ghost" onclick="go('ptp')">🕐 PTP 실시간</button>
-          <button class="ghost" onclick="go('con')">▤ 시리얼 콘솔</button>
-          <button class="ghost" onclick="go('rep')">📊 리포트</button>
+          <button class="ghost" onclick="go('ptp')">◷ PTP</button>
+          <button class="ghost" onclick="go('con')">▤ 콘솔</button>
+          <button class="ghost" onclick="go('rep')">▧ 리포트</button>
         </div>
-        <p class="cap" style="margin-top:14px">HW 타임스탬프(RX 필터 ALL)로 PC 노이즈를 제거한 FPGA 송신 지터 측정 도구. 측정·이상검출·PTP·리포트 통합.</p>
+        <p class="cap">NIC 하드웨어 타임스탬프(RX 필터 ALL)로 PC 커널·C-state 노이즈를 제거하고 FPGA 송신 지터를 나노초로 측정하는 통합 콘솔. 측정 · 이상검출 · Linux PTP · 리포트.</p>
       </div>
     </div>
   </section>
@@ -148,75 +180,75 @@ a.lnk{color:var(--accent);text-decoration:none;font-weight:500}
   <!-- MEASURE -->
   <section id="meas" hidden>
     <h2>지터 캡처</h2>
-    <div class="card">
+    <div class="card elev">
       <div class="row">
-        <div><label>인터페이스</label><br><input id="m_dev" value="enp4s0" style="width:110px"></div>
-        <div><label>BAG (×10µs)</label><br><input id="m_bag" value="200"></div>
+        <div><label>IFACE</label><br><input id="m_dev" value="enp4s0" style="width:112px"></div>
+        <div><label>BAG ×10µs</label><br><input id="m_bag" value="200"></div>
         <div><label>반복</label><br><input id="m_rep" value="10"></div>
         <button class="act" id="m_run" style="align-self:flex-end">▶ 캡처 실행</button>
         <span class="muted" id="m_msg">SW 타임스탬프 캡처(보드 필요). HW 정밀결과는 아래 확정표.</span>
       </div>
-      <div id="m_result" style="margin-top:16px" hidden>
-        <div class="row" style="gap:16px;align-items:center">
+      <div id="m_result" style="margin-top:18px" hidden>
+        <div class="row" style="gap:22px;align-items:center">
           <span class="badge" id="m_verdict">–</span>
-          <div class="stat"><span class="k">평균 ΔT</span> <b class="mono" id="m_mean">–</b></div>
-          <div class="stat"><span class="k">MAD-std</span> <b class="mono" id="m_rob">–</b></div>
-          <div class="stat"><span class="k">P2P</span> <b class="mono" id="m_p2p">–</b></div>
+          <div class="st"><span class="k">평균 ΔT</span><div class="v" style="font-size:20px"><span class="mono" id="m_mean">–</span></div></div>
+          <div class="st"><span class="k">MAD-std</span><div class="v" style="font-size:20px"><span class="mono" id="m_rob">–</span></div></div>
+          <div class="st"><span class="k">P2P</span><div class="v" style="font-size:20px"><span class="mono" id="m_p2p">–</span></div></div>
         </div>
         <div class="cap" id="m_anom"></div>
       </div>
     </div>
 
-    <h2 style="margin-top:26px">HW 확정 결과 — BAG 스위프</h2>
+    <h2 style="margin-top:30px">HW 확정 — BAG 스위프</h2>
     <div class="tblbox">
-      <table id="sweeptbl"><thead><tr><th>BAG</th><th class="num">평균 ΔT (µs)</th><th class="num">ppm</th>
+      <table><thead><tr><th>BAG</th><th class="num">평균 ΔT µs</th><th class="num">ppm</th>
         <th class="num">참지터 MAD-std</th><th class="num">P2P</th><th class="num">표본</th><th>판정</th></tr></thead>
-        <tbody id="sweepbody"><tr><td colspan=7 class="muted" style="text-align:center">불러오는 중…</td></tr></tbody></table>
+        <tbody id="sweepbody"><tr><td colspan=7 class="muted" style="text-align:center;padding:18px">불러오는 중…</td></tr></tbody></table>
     </div>
     <p class="cap" id="quantumnote"></p>
-
-    <h2 style="margin-top:26px">이상 검출 — 고장주입 시나리오</h2>
+    <h2 style="margin-top:30px">이상 검출 — 고장주입</h2>
     <div class="pills" id="faultpills"><span class="muted">불러오는 중…</span></div>
   </section>
 
   <!-- CONSOLE -->
   <section id="con" hidden>
     <h2>시리얼 콘솔</h2>
-    <div class="row" style="margin-bottom:10px">
-      <input id="c_in" placeholder="명령 입력 (예: cd /mnt/flash && ./kfdx_app --get --vlid=1)" style="flex:1;width:auto">
+    <div class="row" style="margin-bottom:11px">
+      <input id="c_in" placeholder="cd /mnt/flash && ./kfdx_app --get --vlid=1" style="flex:1;width:auto">
       <button class="act" id="c_send">전송</button>
       <button class="ghost" id="c_clear">지우기</button>
     </div>
-    <div class="row" style="margin-bottom:10px">
+    <div class="row" style="margin-bottom:12px">
       <button class="ghost" onclick="quick('cd /mnt/flash && ./kfdx_app --get --vlid=1')">VL1 조회</button>
       <button class="ghost" onclick="quick('cd /mnt/flash && ./kfdx_app --status 2>&1 | head -20')">상태</button>
       <button class="ghost" onclick="quick('dmesg | tail -5')">dmesg</button>
       <button class="ghost" onclick="quick('lsmod | grep kfdx')">드라이버</button>
     </div>
-    <div class="term mono" id="c_out"></div>
-    <p class="cap">⚠ 안전: <span class="mono">--link_down</span>, 미설정 VL <span class="mono">--get</span>, <span class="mono">/proc/kfdx</span> read 금지 — 커널 fault로 보드 hang(B01/B15/B16). 전체 xterm 터미널은 <a class="lnk" href="/terminal.html" target="_blank">terminal.html</a>.</p>
+    <div class="term" id="c_out"></div>
+    <p class="cap">⚠ 안전: <span class="mono">--link_down</span> · 미설정 VL <span class="mono">--get</span> · <span class="mono">/proc/kfdx</span> read 금지 — 커널 fault로 보드 hang(B01/B15/B16). 전체 xterm은 <a class="lnk" href="/terminal.html" target="_blank">terminal.html</a>.</p>
   </section>
 
   <!-- PTP -->
   <section id="ptp" hidden>
     <h2>Linux PTP — enp4s0 PHC 서보</h2>
     <div class="grid g4" style="margin-bottom:16px">
-      <div class="card stat"><div class="k">Offset</div><div class="v ok" id="p_off">–</div><div class="u">ns</div></div>
-      <div class="card stat"><div class="k">State</div><div class="v" id="p_st">–</div><div class="u" id="p_stu">–</div></div>
-      <div class="card stat"><div class="k">Freq 조정</div><div class="v" id="p_fr">–</div><div class="u">ppb</div></div>
-      <div class="card stat"><div class="k">샘플</div><div class="v" id="p_n">–</div></div>
+      <div class="card st"><div class="k">Offset</div><div class="v g" id="p_off">–</div><div class="u">ns</div></div>
+      <div class="card st"><div class="k">State</div><div class="v" id="p_st">–</div><div class="u" id="p_stu">–</div></div>
+      <div class="card st"><div class="k">Freq</div><div class="v" id="p_fr">–</div><div class="u">ppb</div></div>
+      <div class="card st"><div class="k">샘플</div><div class="v" id="p_n">–</div></div>
     </div>
-    <h3>Offset (ns) — 0 수렴 = lock(s2)</h3><canvas id="c_off" height=170></canvas>
-    <h3>Frequency 조정 (ppb)</h3><canvas id="c_freq" height=130></canvas>
-    <p class="cap">phc2sys가 enp4s0 PHC(/dev/ptp0)를 시스템시각에 규율 → HW 타임스탬프 정밀 측정의 기반. 보드 kfdx PTP는 AFDX 인캡슐이라 별개.</p>
+    <h3 style="color:var(--txt3);font-size:12px;letter-spacing:.1em;text-transform:uppercase">Offset (ns) — 0 수렴 = lock (s2)</h3>
+    <canvas id="c_off" height=170></canvas>
+    <h3 style="color:var(--txt3);font-size:12px;letter-spacing:.1em;text-transform:uppercase">Frequency 조정 (ppb)</h3>
+    <canvas id="c_freq" height=130></canvas>
+    <p class="cap">phc2sys가 enp4s0 PHC(/dev/ptp0)를 시스템시각에 규율 → HW 타임스탬프 정밀측정의 기반. 보드 kfdx PTP는 AFDX 인캡슐이라 별개.</p>
   </section>
 
   <!-- REPORT -->
   <section id="rep" hidden>
     <h2>리포트</h2>
-    <div class="row" style="margin-bottom:12px">
-      <a class="lnk" href="/report.html" target="_blank">↗ HW 상세 리포트(7섹션)</a>
-      <span class="muted">·</span>
+    <div class="row" style="margin-bottom:13px">
+      <a class="lnk" href="/report.html" target="_blank">↗ HW 상세 리포트(7섹션)</a><span class="muted">·</span>
       <a class="lnk" href="https://claude.ai/code/artifact/8ad2e6ed-76c5-471d-bb77-9f2024eb83cb" target="_blank">↗ 공유 리포트(Artifact)</a>
     </div>
     <iframe src="/report.html" title="HW 리포트"></iframe>
@@ -225,135 +257,84 @@ a.lnk{color:var(--accent);text-decoration:none;font-weight:500}
 
 <script>
 const $=id=>document.getElementById(id); let seq=0, pending={};
-// theme toggle
-$('themebtn').onclick=()=>{const r=document.documentElement;const cur=r.getAttribute('data-theme');
-  const m=matchMedia('(prefers-color-scheme:dark)').matches;
-  r.setAttribute('data-theme', cur==='dark'?'light': cur==='light'?'dark': (m?'light':'dark'));};
-// tabs
 function go(t){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
-  ['dash','meas','con','ptp','rep'].forEach(s=>$(s).hidden=(s!==t));}
+  ['dash','meas','con','ptp','rep'].forEach(s=>$(s).hidden=(s!==t));if(t==='ptp')renderPtp();}
 $('tabs').onclick=e=>{if(e.target.dataset.t)go(e.target.dataset.t);};
 function quick(c){go('con');$('c_in').value=c;sendCmd(c);}
-
-// ---- WS ----
 let ws=null; const dec=new TextDecoder('latin1');
-function setWS(state){const on=state==='connected';$('wsdot').classList.toggle('on',on);
-  $('wsdot').classList.toggle('bad',state==='disconnected');$('d_ws').textContent=state;}
+function setWS(state){const on=state==='connected';$('wsdot').className='dot '+(on?'on':state==='disconnected'?'bad':'warnc');$('d_ws').textContent=state;}
 function connect(){
-  ws=new WebSocket(`ws://${location.hostname||'localhost'}:8778`); ws.binaryType='arraybuffer';
-  setWS('connecting…');
+  ws=new WebSocket(`ws://${location.hostname||'localhost'}:8778`);ws.binaryType='arraybuffer';setWS('connecting…');
   ws.onopen=()=>{setWS('connected');refreshBoard();};
   ws.onclose=()=>{setWS('disconnected');setTimeout(connect,3000);};
   ws.onerror=()=>setWS('오류');
   ws.onmessage=ev=>{
     if(typeof ev.data==='string'){let d;try{d=JSON.parse(ev.data)}catch(x){return}
-      if((d.op==='cmdresult'||d.op==='captureresult')&&pending[d.id]){pending[d.id](d);delete pending[d.id];}
-      return;}
-    const s=dec.decode(new Uint8Array(ev.data));
-    if(s.charCodeAt(0)===0)return; // status frame
-    // 원시 시리얼 → 콘솔 탭에 반영
-    const el=$('c_out'); if(el){el.textContent+=s; el.scrollTop=el.scrollHeight;}
-  };
+      if((d.op==='cmdresult'||d.op==='captureresult')&&pending[d.id]){pending[d.id](d);delete pending[d.id];}return;}
+    const s=dec.decode(new Uint8Array(ev.data));if(s.charCodeAt(0)===0)return;
+    const el=$('c_out');if(el){el.textContent+=s;el.scrollTop=el.scrollHeight;}};
 }
-function rpc(c,t=8){return new Promise((res,rej)=>{
-  if(!ws||ws.readyState!==1){rej('무연결');return;}
-  const id='r'+(++seq); pending[id]=d=>res(d);
-  ws.send(JSON.stringify({op:'cmd',c,t,id}));
+function rpc(c,t=8){return new Promise((res,rej)=>{if(!ws||ws.readyState!==1){rej('무연결');return;}
+  const id='r'+(++seq);pending[id]=d=>res(d);ws.send(JSON.stringify({op:'cmd',c,t,id}));
   setTimeout(()=>{if(pending[id]){delete pending[id];rej('타임아웃');}},(t+5)*1000);});}
-function capture(o){return new Promise((res,rej)=>{
-  if(!ws||ws.readyState!==1){rej('무연결');return;}
-  const id='c'+(++seq); pending[id]=d=>res(d.data);
-  ws.send(JSON.stringify({op:'capture',id,...o}));
+function capture(o){return new Promise((res,rej)=>{if(!ws||ws.readyState!==1){rej('무연결');return;}
+  const id='c'+(++seq);pending[id]=d=>res(d.data);ws.send(JSON.stringify({op:'capture',id,...o}));
   setTimeout(()=>{if(pending[id]){delete pending[id];rej('타임아웃');}},40000);});}
-
-// ---- board status ----
 async function refreshBoard(){
-  $('boardtxt').textContent='확인중'; $('boarddot').className='dot warnc';
-  $('d_board').textContent='확인중…';
-  try{
-    const r=await rpc('cd /mnt/flash && ./kfdx_app --get --vlid=1 2>&1 | grep -iE "vlid|bag" | tr "\\n" " "',7);
-    if(r.out&&r.out.trim()){$('boardtxt').textContent='정상';$('boarddot').className='dot on';
-      $('d_board').textContent=r.out.trim().slice(0,50);$('d_note').textContent='';}
-    else{throw '무응답';}
-  }catch(e){$('boardtxt').textContent='무응답';$('boarddot').className='dot bad';
-    $('d_board').textContent='무응답 (hung 가능)';
-    $('d_note').textContent='⚠ 보드 무응답 — 커널 hang(B16 등) 시 물리 파워사이클 필요. 재부팅 후 init.sh가 드라이버·VL 복구.';}
+  $('boardtxt').textContent='확인중';$('boarddot').className='dot warnc';$('d_board').textContent='확인중…';
+  try{const r=await rpc('cd /mnt/flash && ./kfdx_app --get --vlid=1 2>&1 | grep -iE "vlid|bag" | tr "\\n" " "',7);
+    if(r.out&&r.out.trim()){$('boardtxt').textContent='정상';$('boarddot').className='dot on';$('d_board').textContent=r.out.trim().slice(0,46);$('d_note').textContent='';}
+    else throw '무응답';
+  }catch(e){$('boardtxt').textContent='오프라인';$('boarddot').className='dot bad';$('d_board').textContent='무응답';
+    $('d_note').textContent='⚠ 보드 무응답 — 전원 꺼짐 또는 커널 hang(B16). 재부팅 시 init.sh가 드라이버·VL 복구.';}
 }
 $('d_refresh').onclick=refreshBoard;
-
-// ---- measure ----
-$('m_run').onclick=async()=>{
-  $('m_run').disabled=true;$('m_msg').textContent='캡처 중… 송신+수신 (~15s)';
-  try{
-    const d=await capture({dev:$('m_dev').value,bag:+$('m_bag').value,repeat:+$('m_rep').value});
-    if(!d||d.error){throw d&&d.error||'실패';}
-    $('m_result').hidden=false;
-    const v=d.verdict||'?'; const b=$('m_verdict'); b.textContent=v; b.className='badge v'+v;
-    $('m_mean').textContent=(d.dt_mean||0).toFixed(2)+' µs';
-    $('m_rob').textContent=(d.rob_std||0).toFixed(2)+' µs';
-    $('m_p2p').textContent=(d.p2p||0).toFixed(1)+' µs';
+$('m_run').onclick=async()=>{$('m_run').disabled=true;$('m_msg').textContent='캡처 중… (~15s)';
+  try{const d=await capture({dev:$('m_dev').value,bag:+$('m_bag').value,repeat:+$('m_rep').value});
+    if(!d||d.error)throw d&&d.error||'실패';$('m_result').hidden=false;
+    const v=d.verdict||'?';const b=$('m_verdict');b.textContent=v;b.className='badge v'+v;
+    $('m_mean').textContent=(d.dt_mean||0).toFixed(2)+' µs';$('m_rob').textContent=(d.rob_std||0).toFixed(2)+' µs';$('m_p2p').textContent=(d.p2p||0).toFixed(1)+' µs';
     $('m_anom').textContent=`손실 ${d.seq_loss||0} · 중복 ${d.seq_dup||0} · 재정렬 ${d.seq_reorder||0} · Rate ${d.rate_violation||0} · Lmax ${d.lmax_violation||0} · 표본 ${d.used_intervals||0}`;
     $('m_msg').textContent='완료.';
-  }catch(e){$('m_msg').textContent='실패: '+e+' (보드 무응답이면 파워사이클 필요)';}
-  finally{$('m_run').disabled=false;}
-};
-// HW 확정표
+  }catch(e){$('m_msg').textContent='실패: '+e+' (보드 오프라인이면 전원 확인)';}
+  finally{$('m_run').disabled=false;}};
 fetch('/data/hwrep_rows.json').then(r=>r.json()).then(rows=>{
-  $('sweepbody').innerHTML=rows.map(r=>{
-    const v=r.verdict||'?';
+  $('sweepbody').innerHTML=rows.map(r=>{const v=r.verdict||'?';
     return `<tr><td>${(r.bag_us/1000).toFixed(0)} ms</td><td class=num>${r.dt_mean.toFixed(2)}</td>
-    <td class=num>${r.ppm>=0?'+':''}${r.ppm.toFixed(2)}</td>
-    <td class=num>${(r.rob_std*1000).toFixed(0)} ns</td><td class=num>${(r.p2p*1000).toFixed(0)} ns</td>
-    <td class=num>${r.used_intervals}</td><td><span class="badge v${v}" style="padding:2px 9px;font-size:11px">${v}</span></td></tr>`;
-  }).join('');
-}).catch(()=>{$('sweepbody').innerHTML='<tr><td colspan=7 class=muted style="text-align:center">데이터 없음</td></tr>';});
-fetch('/data/quantum_levels.json').then(r=>r.json()).then(q=>{
-  const q2=q.find(x=>x.bag===200)||q[0];
-  $('quantumnote').innerHTML=`<b>미시구조:</b> 지터는 랜덤이 아니라 <b>240 ns 격자 2레벨 디더링</b>(결정론적·유계). 240 ns = 72×(1/300MHz), 보드 디바이스트리 clk=299970000 방증. BAG 무관 최악 ±240 ns.`;
-}).catch(()=>{});
-Promise.all([fetch('/data/fault_injection.json').then(r=>r.json()).catch(()=>[]),
-  fetch('/data/detection_unittest.json').then(r=>r.json()).catch(()=>({}))]).then(([f,u])=>{
+    <td class=num>${r.ppm>=0?'+':''}${r.ppm.toFixed(2)}</td><td class=num>${(r.rob_std*1000).toFixed(0)} ns</td>
+    <td class=num>${(r.p2p*1000).toFixed(0)} ns</td><td class=num>${r.used_intervals}</td>
+    <td><span class="badge v${v}" style="padding:2px 10px;font-size:11px">${v}</span></td></tr>`;}).join('');
+}).catch(()=>{$('sweepbody').innerHTML='<tr><td colspan=7 class=muted style="text-align:center;padding:18px">데이터 없음</td></tr>';});
+fetch('/data/quantum_levels.json').then(r=>r.json()).then(()=>{
+  $('quantumnote').innerHTML='<b style="color:var(--txt2)">미시구조:</b> 지터는 랜덤이 아니라 <b style="color:var(--cyan)">240 ns 격자 2레벨 디더링</b>(결정론적·유계). 240 ns = 72×(1/300MHz), 디바이스트리 clk=299970000 방증. BAG 무관 최악 ±240 ns.';}).catch(()=>{});
+Promise.all([fetch('/data/fault_injection.json').then(r=>r.json()).catch(()=>[]),fetch('/data/detection_unittest.json').then(r=>r.json()).catch(()=>({}))]).then(([f,u])=>{
   let h=f.map(s=>`<span class="pill"><span class="d"></span>${s.scenario} ${s.pass?'PASS':'FAIL'}</span>`).join('');
   if(u&&u.total)h+=`<span class="pill"><span class="d"></span>오프라인 단위 ${u.pass}/${u.total}</span>`;
-  $('faultpills').innerHTML=h||'<span class="muted">데이터 없음</span>';
-}).catch(()=>{});
-
-// ---- console ----
-function sendCmd(c){if(!c)return; const el=$('c_out'); el.textContent+='\n$ '+c+'\n'; el.scrollTop=el.scrollHeight;
+  $('faultpills').innerHTML=h||'<span class="muted">데이터 없음</span>';}).catch(()=>{});
+function sendCmd(c){if(!c)return;const el=$('c_out');el.textContent+='\n$ '+c+'\n';el.scrollTop=el.scrollHeight;
   rpc(c,10).then(d=>{el.textContent+=(d.out||'(빈 응답)')+'\n';el.scrollTop=el.scrollHeight;})
   .catch(e=>{el.textContent+='[에러] '+e+'\n';el.scrollTop=el.scrollHeight;});}
-$('c_send').onclick=()=>{sendCmd($('c_in').value);};
+$('c_send').onclick=()=>sendCmd($('c_in').value);
 $('c_in').onkeydown=e=>{if(e.key==='Enter')sendCmd($('c_in').value);};
 $('c_clear').onclick=()=>$('c_out').textContent='';
-
-// ---- PTP ----
 let PH=[];
-function ptpPoll(){fetch('/ptp_data.json?_='+Date.now()).then(r=>r.json()).then(H=>{PH=H;renderPtp();})
-  .catch(()=>{$('ptptxt').textContent='off';$('ptpdot').className='dot';});}
-function renderPtp(){
-  if(!PH||!PH.length)return; const l=PH[PH.length-1];
-  const lock=l.state>=2;
-  $('ptpdot').className='dot '+(lock?'on':'warnc'); $('ptptxt').textContent='s'+l.state;
-  $('d_ptp').textContent=`offset ${l.offset_ns}ns · s${l.state} · ${l.freq_ppb}ppb`;
-  $('p_off').textContent=l.offset_ns; $('p_off').className='v '+(Math.abs(l.offset_ns)<1000?'ok':'am');
-  $('p_st').textContent='s'+l.state; $('p_st').className='v '+(lock?'ok':'am'); $('p_stu').textContent=lock?'locked':'…';
-  $('p_fr').textContent=l.freq_ppb; $('p_n').textContent=PH.length;
-  draw('c_off',PH.map(x=>x.offset_ns),'#2bb6bf',true); draw('c_freq',PH.map(x=>x.freq_ppb),'#e0a34a',false);
-}
-function draw(id,vs,col,zero){const cv=$(id);if(!cv||!vs.length)return;cv.width=cv.clientWidth;
+function ptpPoll(){fetch('/ptp_data.json?_='+Date.now()).then(r=>r.json()).then(H=>{PH=H;renderPtp();}).catch(()=>{$('ptptxt').textContent='off';$('ptpdot').className='dot';});}
+function renderPtp(){if(!PH||!PH.length)return;const l=PH[PH.length-1];const lock=l.state>=2;
+  $('ptpdot').className='dot '+(lock?'on':'warnc');$('ptptxt').textContent='s'+l.state;
+  $('d_ptp').textContent=`${l.offset_ns}ns · s${l.state} · ${l.freq_ppb}ppb`;
+  $('p_off').textContent=l.offset_ns;$('p_off').className='v '+(Math.abs(l.offset_ns)<1000?'g':'a');
+  $('p_st').textContent='s'+l.state;$('p_st').className='v '+(lock?'g':'a');$('p_stu').textContent=lock?'locked':'…';
+  $('p_fr').textContent=l.freq_ppb;$('p_n').textContent=PH.length;
+  draw('c_off',PH.map(x=>x.offset_ns),'#28d7e6',true);draw('c_freq',PH.map(x=>x.freq_ppb),'#f2b03c',false);}
+function draw(id,vs,col,zero){const cv=$(id);if(!cv||!vs.length||$('ptp').hidden)return;cv.width=cv.clientWidth;
   const cx=cv.getContext('2d'),W=cv.width,H=cv.height,p=38;cx.clearRect(0,0,W,H);
-  let mn=Math.min(...vs),mx=Math.max(...vs);if(zero){mx=Math.max(mx,Math.abs(mn),10);mn=-mx;}
-  if(mn===mx){mn-=1;mx+=1;}const Y=v=>p+(H-2*p)*(1-(v-mn)/(mx-mn));
-  const cs=getComputedStyle(document.body);cx.strokeStyle=cs.getPropertyValue('--edge2')||'#333';
-  cx.fillStyle=cs.getPropertyValue('--faint')||'#888';cx.font='10px "IBM Plex Mono",monospace';
-  for(let i=0;i<=4;i++){const y=p+(H-2*p)*i/4;cx.beginPath();cx.moveTo(p,y);cx.lineTo(W-6,y);cx.stroke();
-    cx.fillText(Math.round(mx-(mx-mn)*i/4),3,y+3);}
-  if(zero){cx.strokeStyle=cs.getPropertyValue('--crit')||'#f55';cx.setLineDash([4,3]);cx.beginPath();
-    cx.moveTo(p,Y(0));cx.lineTo(W-6,Y(0));cx.stroke();cx.setLineDash([]);}
-  cx.strokeStyle=col;cx.lineWidth=1.8;cx.beginPath();
-  vs.forEach((v,i)=>{const x=p+(W-p-6)*i/Math.max(1,vs.length-1);i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});cx.stroke();}
-
-connect(); ptpPoll(); setInterval(ptpPoll,2000);
+  let mn=Math.min(...vs),mx=Math.max(...vs);if(zero){mx=Math.max(mx,Math.abs(mn),10);mn=-mx;}if(mn===mx){mn-=1;mx+=1;}
+  const Y=v=>p+(H-2*p)*(1-(v-mn)/(mx-mn));cx.strokeStyle='#20242a';cx.fillStyle='#6a7178';cx.font='10px "IBM Plex Mono",monospace';
+  for(let i=0;i<=4;i++){const y=p+(H-2*p)*i/4;cx.beginPath();cx.moveTo(p,y);cx.lineTo(W-6,y);cx.stroke();cx.fillText(Math.round(mx-(mx-mn)*i/4),3,y+3);}
+  if(zero){cx.strokeStyle='#e82127';cx.setLineDash([4,3]);cx.beginPath();cx.moveTo(p,Y(0));cx.lineTo(W-6,Y(0));cx.stroke();cx.setLineDash([]);}
+  cx.strokeStyle=col;cx.lineWidth=1.9;cx.shadowColor=col;cx.shadowBlur=6;cx.beginPath();
+  vs.forEach((v,i)=>{const x=p+(W-p-6)*i/Math.max(1,vs.length-1);i?cx.lineTo(x,Y(v)):cx.moveTo(x,Y(v));});cx.stroke();cx.shadowBlur=0;}
+connect();ptpPoll();setInterval(ptpPoll,2000);
 window.addEventListener('resize',()=>{if(!$('ptp').hidden)renderPtp();});
 </script>
 </body></html>
