@@ -125,3 +125,21 @@ capture_jitter가 프레임별로 검출 → VL 판정(NORMAL/WARNING/FAULT):
   C-state 잠금이 중앙값(6.4→3.2µs)·꼬리(30→12µs)를 낮추나 변동 자체는 제거 못 함.
 - ⇒ **어떤 단일 관측지터값도 µs 정밀도로 신뢰 불가.** 신뢰 가능한 건 (a)평균=BAG (b)관측지터가 "단일µs 수준"이라는 정성적 상한뿐.
 - 측정값이 시스템 부하에 민감함을 정량 확인 = 정밀측정엔 HW 타임스탬프 필수 근거.
+
+## ★★ HW 타임스탬프 부활 — 필터 ALL 강제 (2026-09-11, 돌파구)
+**어제 "igc HW 비-PTP 프레임 불가" 결론은 틀렸다.** 원인은 igc가 아니라 **tcpdump `-j adapter_unsynced`가 RX 타임스탬프 필터를 PTP(1588) 전용으로 두어** AFDX(비-PTP) 프레임에 타임스탬프가 안 찍힌 것. `ethtool -T enp4s0` 확인 결과 igc는 **rx-filter `all` 지원**.
+
+해법: raw AF_PACKET 소켓 + `SIOCSHWTSTAMP(rx_filter=HWTSTAMP_FILTER_ALL)` 강제 + `SO_TIMESTAMPING(raw hardware)`. 도구: `hwts_jitter.py`.
+
+| 방법 | Jitter RMS | MAD-std | P2P(min~max) | 호스트노이즈 |
+|---|---|---|---|---|
+| USB r8152 (SW) | 38.5µs | — | 707µs | 포함 |
+| igc SW (격리전) | 3.8µs | — | 88µs | 포함 |
+| igc SW (격리후) | 1.4µs | 0.71µs | 20µs | 일부 |
+| **igc HW raw (필터 ALL)** | **0.112µs** | **0.000µs** | **0.238µs** | **완전 제거** |
+
+- **재현성**: 4연속 캡처 모두 min 1999.855 / max 2000.093 (비트 단위 동일). SW는 런마다 흔들림(0.71→1.06µs) → HW가 노이즈 면역임을 대조 증명.
+- **추종 증명**: BAG=100(1000µs) 캡처 → 평균 1000.01µs, MAD-std 0.000, P2P 0.24µs. 클램핑 아님(진짜 측정).
+- **프레임크기 불변**: len=17/1400 동일 결과 → BAG 스케줄러가 크기 무관하게 시작 간격 고정.
+- **결론**: **FPGA AFDX 송신 지터 = RMS 112ns, P2P 238ns(±115ns), robust ~0.** PC 커널/C-state 노이즈를 HW 타임스탬프가 통째로 벗겨냄. 이전 1.4µs는 전부 커널 인터럽트 노이즈였음.
+- **한계(정직)**: 이 측정은 NIC MAC 수신점 지터 = FPGA TX스케줄러+FPGA MAC+ABM탭+NIC RX 합. FPGA **내부 단계별**(Timestamp A/B) 분리는 여전히 RTL 필요. 하지만 **집계 송신 지터의 PC-노이즈 면역 상한 = 238ns**로 확정.

@@ -1,5 +1,8 @@
 # NEXT_ACTION — AFDX 지터 측정·이상검출 (2026-09-10 기준)
 
+> **★ 2026-09-11 업데이트 — HW 타임스탬프 부활**: 아래 "2. B" 의 "FPGA 지터 측정 불가"는 **집계 송신 지터 수준에서 해소됨**. igc RX 필터를 ALL로 강제(`hwts_jitter.py`)하니 PC-노이즈 면역 **FPGA 송신 지터 = RMS 112ns / P2P 238ns** 확정. 단 FPGA **내부 단계별**(Timestamp A/B) 분리는 여전히 RTL 필요(D/E 유효). 상세: `docs/measurement_series.md` 최하단, `PROBLEMS.md`.
+
+
 ## 핵심 결정 (먼저)
 **"정상 BAG 측정 반복" vs "의도적 고장 주입으로 검출 검증" 중 → 고장 주입이 압도적으로 가치 높음. (이번 세션에 실행 완료, 6/6 PASS)**
 

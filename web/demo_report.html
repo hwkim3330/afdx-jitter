@@ -1,0 +1,368 @@
+<title>AFDX 지터 정밀측정</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#eef1f4; --panel:#ffffff; --panel2:#f6f8fa; --edge:#d7dee5; --edge2:#e6ebf0;
+  --ink:#17222e; --ink2:#3a4a59; --mut:#657686; --faint:#8a99a8;
+  --accent:#0e7f88; --accent2:#0aa2ac; --amber:#b9741a; --amber-bg:#f6ecdc;
+  --good:#2e9e5b; --warn:#c1901c; --crit:#cf4a5c;
+  --trace:#0e7f88; --swtrace:#b06a2a;
+  --shadow:0 1px 2px rgba(20,35,50,.05),0 8px 24px rgba(20,35,50,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0b131c; --panel:#111c28; --panel2:#0e1822; --edge:#243546; --edge2:#1b2837;
+  --ink:#e7eef5; --ink2:#c0cddb; --mut:#8598aa; --faint:#5f7284;
+  --accent:#2bb6bf; --accent2:#38cdd6; --amber:#e0a34a; --amber-bg:#241a0e;
+  --good:#3fbf72; --warn:#dcae3e; --crit:#e56377;
+  --trace:#2bb6bf; --swtrace:#d38b45;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+}}
+:root[data-theme="dark"]{
+  --ground:#0b131c; --panel:#111c28; --panel2:#0e1822; --edge:#243546; --edge2:#1b2837;
+  --ink:#e7eef5; --ink2:#c0cddb; --mut:#8598aa; --faint:#5f7284;
+  --accent:#2bb6bf; --accent2:#38cdd6; --amber:#e0a34a; --amber-bg:#241a0e;
+  --good:#3fbf72; --warn:#dcae3e; --crit:#e56377;
+  --trace:#2bb6bf; --swtrace:#d38b45;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font:400 15px/1.6 "IBM Plex Sans",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+.wrap{max-width:920px;margin:0 auto;padding:0 22px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h2{font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:0 0 14px}
+h3{font-weight:600;font-size:17px;margin:0 0 4px;color:var(--ink);text-wrap:balance}
+p{margin:0 0 10px;max-width:66ch;color:var(--ink2)}
+section{padding:34px 0;border-top:1px solid var(--edge2)}
+.lead{color:var(--ink2)}
+
+/* header */
+header{background:var(--panel);border-bottom:1px solid var(--edge)}
+.tick{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;padding:16px 0 14px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--faint);letter-spacing:.03em}
+.tick b{color:var(--accent);font-weight:600}
+.tick .sep{color:var(--edge)}
+.htitle{padding:8px 0 22px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12.5px;letter-spacing:.1em;color:var(--amber);text-transform:uppercase;margin-bottom:8px}
+.htitle h1{font-weight:700;font-size:clamp(28px,5vw,42px);line-height:1.08;margin:0 0 10px;letter-spacing:-.01em;text-wrap:balance}
+.htitle p{font-size:16px;max-width:60ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink2);
+  background:var(--panel2);border:1px solid var(--edge);border-radius:999px;padding:4px 11px}
+.chip .k{color:var(--faint)}
+
+/* hero readout */
+.hero{background:var(--panel);border:1px solid var(--edge);border-radius:14px;box-shadow:var(--shadow);
+  padding:26px;display:grid;grid-template-columns:1.15fr 1fr;gap:26px;align-items:center;margin-top:26px}
+.readout .rk{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.readout .rv{font-family:"IBM Plex Mono",monospace;font-weight:600;color:var(--amber);
+  font-size:clamp(52px,9vw,78px);line-height:.95;letter-spacing:-.02em}
+.readout .rv small{font-size:.34em;color:var(--ink2);font-weight:500;letter-spacing:0}
+.readout .sub{margin-top:12px;font-size:14px;color:var(--ink2);max-width:34ch}
+.rmeta{border-left:1px solid var(--edge);padding-left:24px;display:flex;flex-direction:column;gap:14px}
+.rmeta .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.rmeta .rn{font-size:13px;color:var(--mut)}
+.rmeta .rd{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:19px}
+.rmeta .rd.hw{color:var(--good)} .rmeta .rd.sw{color:var(--swtrace)}
+.rmeta .note{font-size:12px;color:var(--faint)}
+@media(max-width:640px){.hero{grid-template-columns:1fr;gap:18px}
+  .rmeta{border-left:0;border-top:1px solid var(--edge);padding-left:0;padding-top:16px}}
+
+/* callout */
+.callout{background:var(--amber-bg);border:1px solid var(--edge);border-radius:12px;padding:18px 20px;margin-top:22px}
+.callout .tag{font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);font-weight:600;margin-bottom:6px}
+.callout p{margin:0;color:var(--ink2)}
+.callout code{font-family:"IBM Plex Mono",monospace;font-size:.88em;background:var(--panel);border:1px solid var(--edge);border-radius:5px;padding:1px 6px;color:var(--ink)}
+
+/* charts */
+.chartbox{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:22px 22px 16px;box-shadow:var(--shadow)}
+.cap{font-size:13px;color:var(--mut);margin-top:12px;max-width:70ch}
+svg{display:block;width:100%;height:auto}
+.svg-lab{font-family:"IBM Plex Mono",monospace;font-size:12px;fill:var(--ink2)}
+.svg-val{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600}
+.svg-ax{font-family:"IBM Plex Mono",monospace;font-size:11px;fill:var(--faint)}
+.svg-grid{stroke:var(--edge2);stroke-width:1}
+
+/* generic grid of tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--panel);border:1px solid var(--edge);border-radius:11px;padding:15px 16px}
+.tile .tk{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+.tile .tv{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:26px;margin-top:5px;color:var(--ink)}
+.tile .tv.ok{color:var(--good)} .tile .tv.ac{color:var(--accent)}
+.tile .tu{font-size:12px;color:var(--faint);margin-top:2px}
+
+/* table */
+.tblbox{overflow-x:auto;border:1px solid var(--edge);border-radius:11px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+th,td{text-align:left;padding:11px 15px;border-bottom:1px solid var(--edge2)}
+th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:600;background:var(--panel2)}
+tr:last-child td{border-bottom:0}
+td.num{font-family:"IBM Plex Mono",monospace;text-align:right;font-variant-numeric:tabular-nums}
+.win td{background:color-mix(in srgb,var(--good) 9%,transparent)}
+.win td:first-child{font-weight:600}
+
+/* status pills */
+.pills{display:flex;flex-wrap:wrap;gap:9px}
+.pill{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;
+  background:var(--panel);border:1px solid var(--edge);border-radius:9px;padding:8px 13px}
+.pill .dot{width:8px;height:8px;border-radius:50%}
+.pill.pass .dot{background:var(--good)} .pill .mono{color:var(--mut);font-size:12px}
+
+/* two-col problem grid */
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.cols{grid-template-columns:1fr}}
+.pcard{background:var(--panel);border:1px solid var(--edge);border-radius:11px;padding:16px 18px;height:100%}
+.pcard h4{margin:0 0 12px;font-size:14px;display:flex;align-items:center;gap:8px}
+.pcard h4 .b{width:9px;height:9px;border-radius:2px}
+.pcard.solved h4 .b{background:var(--good)} .pcard.open h4 .b{background:var(--warn)}
+.pcard ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:11px}
+.pcard li{font-size:13.5px;color:var(--ink2);padding-left:16px;position:relative;line-height:1.5}
+.pcard li:before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--edge)}
+.pcard li b{color:var(--ink);font-weight:600}
+
+/* ptp */
+.ptprow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;align-items:stretch}
+.lockbadge{display:inline-flex;align-items:center;gap:9px;background:color-mix(in srgb,var(--good) 12%,var(--panel));
+  border:1px solid color-mix(in srgb,var(--good) 40%,var(--edge));border-radius:9px;padding:8px 14px;font-size:13.5px;font-weight:500}
+.lockbadge .dot{width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good)}
+
+.repro{background:var(--panel2);border:1px solid var(--edge);border-radius:10px;padding:14px 16px;
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink2);overflow-x:auto;line-height:1.7}
+.repro .c{color:var(--accent);white-space:pre}
+.repro .cm{color:var(--faint)}
+
+footer{padding:30px 0 50px;color:var(--faint);font-size:12.5px;font-family:"IBM Plex Mono",monospace}
+footer a{color:var(--accent);text-decoration:none}
+a.live{color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+@media(prefers-reduced-motion:no-preference){.rv{transition:none}}
+</style>
+
+<header>
+  <div class="wrap">
+    <div class="tick">
+      <span><b>TSN그룹 / 224</b></span><span class="sep">·</span>
+      <span>AFDX 데모용 툴 구현</span><span class="sep">·</span>
+      <span>NXP T2080RDB + KETI KFDX (Xilinx FPGA AFDX NIC)</span>
+      <span style="flex:1"></span>
+      <span>2026-09-11</span>
+    </div>
+    <div class="htitle">
+      <div class="eyebrow">ARINC 664 Part 7 · 송신 지터 실측</div>
+      <h1>AFDX 송신 지터를 나노초로 재다</h1>
+      <p class="lead">FPGA가 내보내는 AFDX 프레임의 송신 지터를, PC 커널 노이즈를 걷어내고 NIC 하드웨어 타임스탬프로 직접 측정했다. 어제까지 쓰레기값이던 경로를, 원인 하나를 짚어 되살린 결과다.</p>
+      <div class="chips">
+        <span class="chip"><span class="k">kfdx.ko</span> 1.0.20211209-1</span>
+        <span class="chip"><span class="k">NIC</span> Intel igc · fw 1038:73a</span>
+        <span class="chip"><span class="k">VL1</span> BAG 200 (2000µs) · TX</span>
+        <span class="chip"><span class="k">캡처</span> hwts_jitter.py</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HERO RESULT -->
+  <div class="hero">
+    <div class="readout">
+      <div class="rk">FPGA AFDX 송신 지터 · RMS</div>
+      <div class="rv">112<small> ns</small></div>
+      <div class="sub">NIC 하드웨어 RX 타임스탬프 기준. 진폭(P2P) 238&nbsp;ns, robust(MAD-std) ≈ 0.</div>
+    </div>
+    <div class="rmeta">
+      <div class="row"><span class="rn">HW 타임스탬프 (필터 ALL)</span><span class="rd hw">112 ns</span></div>
+      <div class="row"><span class="rn">SW 커널 타임스탬프</span><span class="rd sw">1 295 ns</span></div>
+      <div class="row"><span class="rn">제거된 PC 노이즈</span><span class="rd">≈ 11×</span></div>
+      <div class="note">동일 조건 4연속 캡처 min 1999.855 / max 2000.093 µs — 비트 단위 재현. SW는 런마다 흔들리고 HW는 미동 없음.</div>
+    </div>
+  </div>
+
+  <!-- BREAKTHROUGH CALLOUT -->
+  <div class="callout">
+    <div class="tag">원인 — "1588이 문제였다"</div>
+    <p>어제 <code>tcpdump -j adapter_unsynced</code>의 프레임 간격이 14 ms·348 ms로 난장판이던 건 igc의 한계가 아니라, RX 타임스탬프 <b>필터가 PTP(IEEE 1588) 전용</b>으로 잠겨 비-PTP인 AFDX 프레임엔 타임스탬프가 안 찍혔기 때문이다. <code>ethtool -T</code>상 igc는 <code>rx-filter all</code>을 지원 — raw 소켓에서 <code>SIOCSHWTSTAMP</code>로 필터를 <b>ALL</b>로 강제하니 커널·C-state 노이즈가 통째로 사라졌다.</p>
+  </div>
+
+  <!-- NOISE LADDER -->
+  <section>
+    <h2>측정계 노이즈를 한 층씩 벗기다</h2>
+    <h3>같은 FPGA, 같은 BAG — 측정 방법만 바꿔가며 잰 지터 RMS</h3>
+    <p>평균 간격은 어느 방법에서든 BAG(2000µs)에 정확히 일치했다. 달라지는 건 지터뿐이고, 그 지터는 대부분 <b>FPGA가 아니라 PC 측정계</b>에서 나왔다. 로그 스케일로 보면 각 단계가 무엇을 걷어냈는지 드러난다.</p>
+    <div class="chartbox">
+      <svg viewBox="0 0 620 232" role="img" aria-label="측정 방법별 지터 RMS 로그 스케일 막대">
+        <!-- gridlines: 100ns, 1us, 10us -->
+        <line class="svg-grid" x1="150" y1="24" x2="150" y2="196"/>
+        <line class="svg-grid" x1="317" y1="24" x2="317" y2="196"/>
+        <line class="svg-grid" x1="483" y1="24" x2="483" y2="196"/>
+        <text class="svg-ax" x="150" y="214" text-anchor="middle">100 ns</text>
+        <text class="svg-ax" x="317" y="214" text-anchor="middle">1 µs</text>
+        <text class="svg-ax" x="483" y="214" text-anchor="middle">10 µs</text>
+        <!-- rows: y = 34,76,118,160 ; bar h 26 -->
+        <!-- USB r8152 SW 38500ns -> x2=581 -->
+        <text class="svg-lab" x="12" y="51">USB r8152 · SW</text>
+        <rect x="150" y="34" width="431" height="26" rx="4" fill="var(--edge)"/>
+        <text class="svg-val" x="571" y="51" text-anchor="end" fill="var(--ink2)">38.5 µs</text>
+        <!-- igc SW 3800 -> x2=413 -->
+        <text class="svg-lab" x="12" y="93">igc · SW</text>
+        <rect x="150" y="76" width="263" height="26" rx="4" fill="var(--edge)"/>
+        <text class="svg-val" x="423" y="93" fill="var(--ink2)">3.8 µs</text>
+        <!-- igc SW isolated 1400 -> x2=341 -->
+        <text class="svg-lab" x="12" y="135">igc · SW + 격리</text>
+        <rect x="150" y="118" width="191" height="26" rx="4" fill="var(--swtrace)"/>
+        <text class="svg-val" x="351" y="135" fill="var(--swtrace)">1.4 µs</text>
+        <!-- igc HW 112 -> x2=158 (min visible) -->
+        <text class="svg-lab" x="12" y="177" style="fill:var(--ink);font-weight:600">igc · HW (필터 ALL)</text>
+        <rect x="150" y="160" width="10" height="26" rx="3" fill="var(--good)"/>
+        <text class="svg-val" x="170" y="177" fill="var(--good)">112 ns  ◄ 오늘</text>
+      </svg>
+      <div class="cap">USB 배칭 노이즈 → 커널 스케줄러 노이즈 → C-state 웨이크업 지연을 차례로 제거. 마지막 HW 타임스탬프가 커널을 거치지 않아 남은 노이즈까지 걷어냈다. 격리 설정은 <span class="mono">measure_setup.sh</span>(governor·IRQ 코어고정·C-state 잠금).</div>
+    </div>
+  </section>
+
+  <!-- HW vs SW SPREAD -->
+  <section>
+    <h2>같은 스트림, 두 자</h2>
+    <h3>프레임 간격 분포 — BAG 2000µs 기준</h3>
+    <p>같은 291개 프레임을 HW와 SW 타임스탬프로 동시에 쟀다. HW는 2000µs에 얇은 선으로 붙고, SW는 ±7µs로 퍼진다 — 그 퍼짐이 FPGA가 아니라 PC에서 더해진 오차라는 직접 증거다.</p>
+    <div class="chartbox">
+      <svg viewBox="0 0 620 176" role="img" aria-label="HW 대 SW 프레임 간격 분포 비교">
+        <!-- axis 1990..2010us mapped x 60..584 -->
+        <line class="svg-grid" x1="60" y1="150" x2="584" y2="150"/>
+        <!-- ticks -->
+        <g>
+          <line class="svg-grid" x1="60" y1="146" x2="60" y2="154"/><text class="svg-ax" x="60" y="168" text-anchor="middle">1990</text>
+          <line class="svg-grid" x1="322" y1="146" x2="322" y2="154"/><text class="svg-ax" x="322" y="168" text-anchor="middle">2000</text>
+          <line class="svg-grid" x1="584" y1="146" x2="584" y2="154"/><text class="svg-ax" x="584" y="168" text-anchor="middle">2010 µs</text>
+        </g>
+        <!-- BAG center dashed -->
+        <line x1="322" y1="20" x2="322" y2="150" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+        <text class="svg-ax" x="322" y="16" text-anchor="middle" style="fill:var(--accent)">BAG</text>
+        <!-- SW band: 1992.702..2006.292 -> x 131..487 , y 44 -->
+        <text class="svg-lab" x="60" y="40">SW 커널</text>
+        <rect x="131" y="48" width="356" height="22" rx="3" fill="var(--swtrace)" opacity="0.5"/>
+        <text class="svg-val" x="491" y="63" fill="var(--swtrace)">P2P 13.6 µs</text>
+        <!-- HW band: 1999.855..2000.093 -> x 316..322 , y 96 -->
+        <text class="svg-lab" x="60" y="92" style="fill:var(--ink);font-weight:600">HW 하드웨어</text>
+        <rect x="316" y="100" width="7" height="22" rx="2" fill="var(--good)"/>
+        <text class="svg-val" x="332" y="115" fill="var(--good)">P2P 238 ns</text>
+      </svg>
+      <div class="cap">두 방법의 평균은 2000.0µs로 0.01µs 내에서 일치 — HW가 값을 억지로 붙이는 게 아니라 진짜 측정이라는 뜻. BAG를 100(1000µs)으로 바꿔도 HW는 평균 1000.01µs로 그대로 추종했다.</div>
+    </div>
+  </section>
+
+  <!-- COMPARISON TABLE -->
+  <section>
+    <h2>측정 방법 대조</h2>
+    <div class="tblbox">
+      <table>
+        <thead><tr><th>방법</th><th style="text-align:right">지터 RMS</th><th style="text-align:right">MAD-std</th><th style="text-align:right">진폭 P2P</th><th>PC 노이즈</th></tr></thead>
+        <tbody>
+          <tr><td>USB r8152 (SW)</td><td class="num">38.5 µs</td><td class="num">—</td><td class="num">707 µs</td><td>포함</td></tr>
+          <tr><td>igc SW (격리 전)</td><td class="num">3.8 µs</td><td class="num">—</td><td class="num">88 µs</td><td>포함</td></tr>
+          <tr><td>igc SW (격리 후)</td><td class="num">1.4 µs</td><td class="num">0.71 µs</td><td class="num">20 µs</td><td>일부</td></tr>
+          <tr class="win"><td>igc HW · 필터 ALL</td><td class="num">0.112 µs</td><td class="num">0.000 µs</td><td class="num">0.238 µs</td><td>제거</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">"제거"는 타임스탬프가 커널을 거치지 않고 NIC 하드웨어에서 찍힌다는 뜻. 남은 238ns는 FPGA TX 스케줄러 + MAC + ABM 탭 + NIC RX의 <b>집계</b>값이며, 단계별 분리는 FPGA 내부 타임스탬프가 있어야 가능하다(아래 한계 참조).</p>
+  </section>
+
+  <!-- MAX JITTER NOTE -->
+  <section>
+    <h2>혼동 주의</h2>
+    <h3>KFDX가 보고하는 "Max Jitter"는 측정값이 아니다</h3>
+    <p>보드 <span class="mono">get_head</span>의 Max Jitter는 AFDX 규격이 정한 <b>계산 상한</b> <span class="mono">Σ(Lmax+20)×8 / 1Gbps</span> [ns]이다. VL1의 Lmax를 1518→512로 바꾸면 정확히 8048ns가 줄어드는 것으로 확정했다 — 트래픽·부하와 무관한 순수 산식. 실제 송출 지터는 위의 <b>112ns</b>가 답이다.</p>
+  </section>
+
+  <!-- ANOMALY DETECTION -->
+  <section>
+    <h2>이상 검출 — 과제의 나머지 절반</h2>
+    <h3>정상 → 고장 주입 → 검출 → 복구</h3>
+    <p>프레임 레벨(시퀀스번호·Lmax·VLID) 판정이라 호스트 노이즈와 무관하게 신뢰할 수 있다. 라이브 6종·오프라인 10종 전부 통과했고, 이 과정에서 실제 검출 맹점(손실 오분류) 하나를 잡아 고쳤다.</p>
+    <div class="tiles" style="margin-bottom:16px">
+      <div class="tile"><div class="tk">라이브 고장주입</div><div class="tv ok">6 / 6</div><div class="tu">PASS</div></div>
+      <div class="tile"><div class="tk">오프라인 단위검증</div><div class="tv ok">10 / 10</div><div class="tu">PASS</div></div>
+      <div class="tile"><div class="tk">부수 성과</div><div class="tv ac">1</div><div class="tu">검출 버그 발견·수정</div></div>
+    </div>
+    <div class="pills">
+      <span class="pill pass"><span class="dot"></span>S0 정상 <span class="mono">NORMAL</span></span>
+      <span class="pill pass"><span class="dot"></span>S1 Lmax 초과 <span class="mono">FAULT</span></span>
+      <span class="pill pass"><span class="dot"></span>S2 Rate 위반 <span class="mono">WARNING</span></span>
+      <span class="pill pass"><span class="dot"></span>S3 시퀀스 손실 <span class="mono">FAULT</span></span>
+      <span class="pill pass"><span class="dot"></span>S4 잘못된 VLID <span class="mono">FAULT</span></span>
+      <span class="pill pass"><span class="dot"></span>S5 복구 <span class="mono">NORMAL</span></span>
+    </div>
+  </section>
+
+  <!-- PTP -->
+  <section>
+    <h2>Linux PTP — HW 타임스탬프를 연 열쇠</h2>
+    <h3>PC 자체 하드웨어 클록 서보</h3>
+    <p>PTP 타임스탬프 경로를 파고든 것이 이번 돌파구로 이어졌다. phc2sys가 enp4s0의 PHC(/dev/ptp0)를 시스템 시각에 규율하며, 오프셋이 나노초로 수렴해 잠긴다. 보드 kfdx PTP는 AFDX 인캡슐이라 표준 ptp4l과는 상호운용되지 않는 별개 데모다.</p>
+    <div class="ptprow">
+      <div class="tile"><div class="tk">Offset</div><div class="tv ok">−3<span style="font-size:14px;color:var(--faint)"> ns</span></div></div>
+      <div class="tile"><div class="tk">State</div><div class="tv ok">s2</div><div class="tu">locked</div></div>
+      <div class="tile"><div class="tk">Freq 조정</div><div class="tv">−3 870<span style="font-size:14px;color:var(--faint)"> ppb</span></div></div>
+      <div class="tile"><div class="tk">샘플</div><div class="tv">300</div></div>
+    </div>
+    <p style="margin-top:14px"><span class="lockbadge"><span class="dot"></span>PHC LOCKED</span> &nbsp; 실시간 오프셋·주파수 차트는 로컬 대시보드 <a class="live" href="/ptp.html">ptp.html</a>에서.</p>
+  </section>
+
+  <!-- PROBLEMS -->
+  <section>
+    <h2>문제점 정리</h2>
+    <div class="cols">
+      <div class="pcard solved">
+        <h4><span class="b"></span>해결됨</h4>
+        <ul>
+          <li><b>HW 타임스탬프 garbage</b> — RX 필터 PTP전용 → 필터 ALL 강제로 해결(112ns 달성)</li>
+          <li><b>지터 3.8~140µs 변동</b> — PC C-state·governor → measure_setup.sh 격리</li>
+          <li><b>손실 검출 맹점</b> — 송신경계 SN 오판 → 시간게이트 제거</li>
+          <li><b>Rate 오탐</b> — 타임스탬프 분할 → 쌍합 검사로 면역</li>
+        </ul>
+      </div>
+      <div class="pcard open">
+        <h4><span class="b"></span>남은 한계 (구조적)</h4>
+        <ul>
+          <li><b>FPGA 단계별 지터 분리 불가</b> — 238ns는 집계값. Timestamp A/B는 FPGA RTL 필요</li>
+          <li><b>CPM/ABM 접근 불가</b> — ABM은 단방향 탭. 재개조건 충족 전 중단</li>
+          <li><b>kfdx PTP ≠ 표준 PTP</b> — AFDX 인캡슐, ptp4l 상호운용 불가</li>
+          <li><b>TX 인터럽트 정지(버그 #11)</b> — baseline 잔존. 수정버전서 확인 필요</li>
+        </ul>
+      </div>
+    </div>
+    <p class="cap" style="margin-top:14px"><b>안전 원칙(재확인):</b> <span class="mono">--link_down</span> 절대금지(드라이버 D-state hung → 물리 파워사이클만 복구) · 미검증 레지스터 write 금지, 진단은 read-only만.</p>
+  </section>
+
+  <!-- BASELINE + REPRO -->
+  <section>
+    <h2>재현 · Baseline</h2>
+    <h3>수정전 버전 기록 (수정버전 대조용)</h3>
+    <div class="tblbox" style="margin:14px 0 18px">
+      <table>
+        <thead><tr><th>구성요소</th><th>버전 / 식별</th><th>확인</th></tr></thead>
+        <tbody>
+          <tr><td>KFDX 드라이버</td><td class="mono">kfdx.ko 1.0.20211209-1</td><td class="mono" style="color:var(--mut)">dmesg | grep KFDX</td></tr>
+          <tr><td>KFDX FPGA</td><td class="mono">Vendor 7014h · HW 2025.7.30</td><td class="mono" style="color:var(--mut)">probe 로그</td></tr>
+          <tr><td>PC NIC</td><td class="mono">Intel igc · fw 1038:73a</td><td class="mono" style="color:var(--mut)">ethtool -i</td></tr>
+          <tr><td>RX 필터 모드</td><td class="mono">none, all (지원)</td><td class="mono" style="color:var(--mut)">ethtool -T</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="repro"><span class="cm"># FPGA AFDX 송신 지터 정밀 측정 (필터 ALL + raw 소켓 HW 타임스탬프)</span>
+<span class="c">sudo python3 hwts_jitter.py --iface enp4s0 --vlid 1 --bag-us 2000 --dur 9</span>
+<span class="cm"># 동시에 보드에서 반복 송신:</span>
+<span class="c">./kfdx_app --send --vlid=1 --udp --len=17 --count=2500</span>
+<span class="cm"># → hw: {mad_std_us: 0.0, rms_us: 0.112, pp_us: 0.238, mean_us: 2000.02}</span></div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    github.com/hwkim3330/afdx-jitter · 정본 docs/measurement_series.md · PROBLEMS.md &nbsp;|&nbsp; KETI TSN그룹 · 2026-09-11
+  </div>
+</footer>
