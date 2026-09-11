@@ -281,13 +281,13 @@ a.live{color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1p
         <!-- SW line -->
         <polyline fill="none" stroke="var(--swtrace)" stroke-width="2.4"
           points="70,87.8 192.5,92.3 315,83.8 437.5,67 560,65.6"/>
-        <!-- HW line -->
+        <!-- HW line (참지터, 클록오프셋 제거 → 평평) -->
         <polyline fill="none" stroke="var(--good)" stroke-width="2.4"
-          points="70,194.6 192.5,195.4 315,191.3 437.5,189.2 560,169.8"/>
+          points="70,194.9 192.5,196.1 315,193.8 437.5,200.6 560,193"/>
         <!-- SW dots -->
         <g fill="var(--swtrace)"><circle cx="70" cy="87.8" r="3.4"/><circle cx="192.5" cy="92.3" r="3.4"/><circle cx="315" cy="83.8" r="3.4"/><circle cx="437.5" cy="67" r="3.4"/><circle cx="560" cy="65.6" r="3.4"/></g>
         <!-- HW dots -->
-        <g fill="var(--good)"><circle cx="70" cy="194.6" r="3.4"/><circle cx="192.5" cy="195.4" r="3.4"/><circle cx="315" cy="191.3" r="3.4"/><circle cx="437.5" cy="189.2" r="3.4"/><circle cx="560" cy="169.8" r="3.4"/></g>
+        <g fill="var(--good)"><circle cx="70" cy="194.9" r="3.4"/><circle cx="192.5" cy="196.1" r="3.4"/><circle cx="315" cy="193.8" r="3.4"/><circle cx="437.5" cy="200.6" r="3.4"/><circle cx="560" cy="193" r="3.4"/></g>
         <!-- HW band annotation: fixed P2P 238ns -->
         <text class="svg-val" x="315" y="228" text-anchor="middle" fill="var(--good)">HW 진폭 P2P = 238 ns 고정 (BAG 무관)</text>
         <!-- x labels -->
@@ -296,18 +296,18 @@ a.live{color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1p
           <text x="315" y="245">4</text><text x="437.5" y="245">8</text><text x="560" y="245">16 ms</text>
         </g>
       </svg>
-      <div class="cap">SW 지터(윗선)는 1.2~2.2µs로 부하에 따라 흔들리고, BAG가 커질수록(코어가 더 깊이 잠들어) 오히려 나빠진다(P2P 최대 65µs). HW 지터(아랫선)는 <b>110~200ns로 거의 평평</b>하고 진폭은 <b>238ns에 고정</b> — FPGA BAG 카운터의 양자화 폭이다.</div>
+      <div class="cap">SW 지터(윗선)는 1.2~2.2µs로 부하에 따라 흔들리고, BAG가 커질수록(코어가 더 깊이 잠들어) 오히려 나빠진다(P2P 최대 65µs). HW 참지터(아랫선, 클록오프셋 제거)는 <b>99~118ns로 완전히 평평</b>하고 진폭은 <b>238ns에 고정</b> — FPGA BAG 카운터의 양자화 폭이며 BAG와 무관하다.</div>
     </div>
 
     <div class="tblbox" style="margin-top:18px">
       <table>
-        <thead><tr><th>BAG</th><th style="text-align:right">평균 간격</th><th style="text-align:right">HW 지터 RMS</th><th style="text-align:right">HW P2P</th><th style="text-align:right">SW 지터 RMS</th><th style="text-align:right">표본</th></tr></thead>
+        <thead><tr><th>BAG</th><th style="text-align:right">평균 간격</th><th style="text-align:right">HW 참지터 RMS</th><th style="text-align:right">HW P2P</th><th style="text-align:right">SW 지터 RMS</th><th style="text-align:right">표본</th></tr></thead>
         <tbody>
-          <tr><td>1 ms</td><td class="num">1000.011 µs</td><td class="num">114 ns</td><td class="num">238 ns</td><td class="num">1.33 µs</td><td class="num">5 232</td></tr>
-          <tr><td>2 ms</td><td class="num">2000.020 µs</td><td class="num">112 ns</td><td class="num">238 ns</td><td class="num">1.20 µs</td><td class="num">3 788</td></tr>
-          <tr><td>4 ms</td><td class="num">4000.041 µs</td><td class="num">123 ns</td><td class="num">238 ns</td><td class="num">1.46 µs</td><td class="num">2 673</td></tr>
-          <tr><td>8 ms</td><td class="num">8000.082 µs</td><td class="num">129 ns</td><td class="num">238 ns</td><td class="num">2.15 µs</td><td class="num">1 979</td></tr>
-          <tr><td>16 ms</td><td class="num">16000.163 µs</td><td class="num">202 ns</td><td class="num">238 ns</td><td class="num">2.22 µs</td><td class="num">1 552</td></tr>
+          <tr><td>1 ms</td><td class="num">1000.011 µs</td><td class="num">113 ns</td><td class="num">238 ns</td><td class="num">1.33 µs</td><td class="num">5 232</td></tr>
+          <tr><td>2 ms</td><td class="num">2000.020 µs</td><td class="num">110 ns</td><td class="num">238 ns</td><td class="num">1.20 µs</td><td class="num">3 788</td></tr>
+          <tr><td>4 ms</td><td class="num">4000.041 µs</td><td class="num">116 ns</td><td class="num">238 ns</td><td class="num">1.46 µs</td><td class="num">2 673</td></tr>
+          <tr><td>8 ms</td><td class="num">8000.082 µs</td><td class="num">99 ns</td><td class="num">238 ns</td><td class="num">2.15 µs</td><td class="num">1 979</td></tr>
+          <tr><td>16 ms</td><td class="num">16000.163 µs</td><td class="num">118 ns</td><td class="num">238 ns</td><td class="num">2.22 µs</td><td class="num">1 552</td></tr>
         </tbody>
       </table>
     </div>
@@ -316,8 +316,9 @@ a.live{color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1p
     <div style="display:grid;grid-template-columns:1fr 1.1fr;gap:20px;margin-top:22px;align-items:center">
       <div>
         <div class="eyebrow" style="color:var(--accent)">부수 발견</div>
-        <h3 style="margin-top:6px">FPGA와 PC 클록이 10 ppm 어긋나 있다</h3>
-        <p style="font-size:14px">평균 간격이 BAG보다 항상 조금 길고, 그 초과분이 <b>BAG에 정확히 비례</b>(11→20→41→82→163 ns)한다. 기울기는 <b>10.2 ppm</b> — FPGA TX 클록이 PC 클록계보다 그만큼 느리다는 뜻. 독립 크리스탈 간 정상 오프셋이지만, 이건 <b>HW 타임스탬프라야 보이는</b> ns급 신호다.</p>
+        <h3 style="margin-top:6px">FPGA와 PC 클록이 10.4 ppm 어긋나 있다</h3>
+        <p style="font-size:14px">평균 간격이 BAG보다 항상 조금 길고, 그 초과분이 <b>BAG에 정확히 비례</b>(11→20→41→82→163 ns)한다. 기울기는 <b>10.4 ppm</b> — FPGA TX 클록이 PC 클록계보다 그만큼 느리다.</p>
+        <p style="font-size:14px"><b>하드웨어로 맞출 필요는 없다.</b> AFDX는 설계상 비동기(엔드시스템 간 클록 동기 불요, 각 노드가 로컬 클록으로 BAG 페이싱)라 10 ppm은 크리스탈 공차 안이고 지터 예산(µs) 대비 무의미하다. ppm은 <b>평균만</b> 밀 뿐 지터와 무관 — 위 참지터(238 ns)는 이 오프셋을 제거하고 잰 값이다. HW 주파수 규율은 TSN처럼 공통 시간축이 필요한 응용에서만 의미가 있다.</p>
       </div>
       <div class="chartbox" style="padding:16px 18px 10px">
         <svg viewBox="0 0 380 190" role="img" aria-label="BAG별 평균 간격 초과분, 클록 오프셋">
@@ -330,7 +331,7 @@ a.live{color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1p
           <polyline fill="none" stroke="var(--accent)" stroke-width="2.2"
             points="65,152.1 84,145.6 122,130.4 198,100.8 360,42.3"/>
           <g fill="var(--accent)"><circle cx="65" cy="152.1" r="3.6"/><circle cx="84" cy="145.6" r="3.6"/><circle cx="122" cy="130.4" r="3.6"/><circle cx="198" cy="100.8" r="3.6"/><circle cx="360" cy="42.3" r="3.6"/></g>
-          <text class="svg-val" x="250" y="74" fill="var(--accent)" transform="rotate(-19 250 74)">≈ 10.2 ppm</text>
+          <text class="svg-val" x="250" y="74" fill="var(--accent)" transform="rotate(-19 250 74)">≈ 10.4 ppm</text>
           <g class="svg-ax" text-anchor="middle"><text x="65" y="178">1</text><text x="122" y="178">4</text><text x="198" y="178">8</text><text x="360" y="178">16 ms</text></g>
         </svg>
       </div>
@@ -419,6 +420,30 @@ a.live{color:var(--accent);text-decoration:none;font-weight:500;border-bottom:1p
       </div>
     </div>
     <p class="cap" style="margin-top:14px"><b>안전 원칙(재확인):</b> <span class="mono">--link_down</span> 절대금지(드라이버 D-state hung → 물리 파워사이클만 복구) · 미검증 레지스터 write 금지, 진단은 read-only만.</p>
+  </section>
+
+  <!-- BUGS -->
+  <section>
+    <h2>버그 추적 — 순차 정리</h2>
+    <h3>발견한 결함 14건과 처리 상태</h3>
+    <p>측정 과정에서 드러난 결함을 순서대로 정리했다. 대부분 이번에 원인을 짚어 고쳤고, 남은 건 하드웨어(펌웨어) 쪽 <b>B04</b>와 구조적 한계 둘뿐이다. 범례: <span style="color:var(--good)">✅ 수정</span> · <span style="color:var(--accent)">🔧 우회</span> · <span style="color:var(--crit)">⛔ 회피</span> · <span style="color:var(--mut)">🔬 한계</span> · <span style="color:var(--warn)">⏳ 미해결</span></p>
+    <div class="tblbox">
+      <table style="min-width:640px">
+        <thead><tr><th>#</th><th>분류</th><th>증상</th><th>원인 · 조치</th><th>상태</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">B01</td><td>HW</td><td>--link_down 시 드라이버 D-state hung</td><td>링크 전이 결함 → <b>사용 금지</b>, 복구=파워사이클</td><td style="color:var(--crit)">⛔ 회피</td></tr>
+          <tr><td class="mono">B04</td><td>HW</td><td>TX 인터럽트가 특정 값에서 정지 → 송신 멈춤</td><td>인터럽트 처리 결함(추정) → rmmod/insmod 복구</td><td style="color:var(--warn)">⏳ 수정버전 확인</td></tr>
+          <tr class="win"><td class="mono">B05</td><td>측정</td><td>HW 타임스탬프 간격 14ms·348ms garbage</td><td>RX 필터 PTP전용 → <b>필터 ALL 강제</b>, 참지터 110ns 달성</td><td style="color:var(--good)">✅ 수정</td></tr>
+          <tr><td class="mono">B06</td><td>측정</td><td>지터 3.8~140µs 요동</td><td>C-state·governor → measure_setup.sh 격리</td><td style="color:var(--good)">✅ 수정</td></tr>
+          <tr><td class="mono">B07</td><td>측정</td><td>평균이 BAG보다 +ppm 초과</td><td>FPGA↔PC 크리스탈 10.4ppm → 관측평균 기준 분리</td><td style="color:var(--mut)">🔬 정상</td></tr>
+          <tr><td class="mono">B08</td><td>검출</td><td>시퀀스 손실 오판(송신경계)</td><td>시간게이트 오분류 → 게이트 제거</td><td style="color:var(--good)">✅ 수정</td></tr>
+          <tr><td class="mono">B09</td><td>검출</td><td>Rate 위반 오탐(타임스탬프 분할)</td><td>이웃 쌍합 검사로 면역</td><td style="color:var(--good)">✅ 수정</td></tr>
+          <tr><td class="mono">B10</td><td>검출</td><td>전 VL 혼합 시 손실 29916 오탐</td><td>VLID 필터 누락 → dst[5]==vlid</td><td style="color:var(--good)">✅ 수정</td></tr>
+          <tr><td class="mono">B14</td><td>HW</td><td>FPGA 내부 단계별 지터 분리 불가</td><td>내부 TS 미노출 → RTL(Timestamp A/B) 필요</td><td style="color:var(--mut)">🔬 한계</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap">주요 9건만 표시 — 전체 14건(B02 send·B03 phy addr·B11 테스트·B12/B13 도구 포함)은 <span class="mono">BUGS.md</span>. 수정버전 도착 시 재확인 1순위는 <b>B04</b>(TX 정지), 2순위 <b>B01</b>(link_down).</p>
   </section>
 
   <!-- BASELINE + REPRO -->
