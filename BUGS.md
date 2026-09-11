@@ -20,6 +20,7 @@
 | B13 | [도구] | `pkill -f <pat>` 가 자기 셸까지 죽임(exit 144) | 패턴 자기참조 | ✅ | 명시적 PID 타깃 |
 | B14 | [HW] | FPGA 내부 단계별 지터(Timestamp A=scheduler, B=MAC TX) 분리 불가 | 내부 타임스탬프 미노출 | 🔬 | **구조적 한계**(버그 아님). fault localization "어느 파이프라인 단계"는 RTL 추가 필요 → NEXT_ACTION E |
 | B15 | [HW] | `/proc/kfdx` 를 read 하면 커널 `Bad page map`(page fault, 프로세스 taint) | proc 핸들러가 잘못된 페이지 매핑 노출 | ⏳ | **읽지 말 것**(진단은 dmesg/kfdx_app 로). 수정버전 확인 대상 |
+| B16 | [HW] | **미설정 VL을 `--get`하면 커널 paging request 오류로 보드 hang** (예: 설정 안 된 vlid=6) | 드라이버가 미할당 VL 슬롯을 검증 없이 역참조 | ⛔ | **설정된 VL만 `--get`**. 복구=물리 파워사이클. B01·B15와 동일 계열(미검증 접근→커널 fault) |
 
 ## 수정버전 도착 시 재확인 우선순위
 1. **B04** (TX 인터럽트 정지) — 데모 안정성 직결. 수정됐는지 최우선 확인.
