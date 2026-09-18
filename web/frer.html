@@ -90,6 +90,11 @@ a.lnk{color:var(--blue);text-decoration:none;font-weight:500}
     </svg>
   </div>
 
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px">
+    <button id="sendBtn" style="background:linear-gradient(180deg,var(--A),#1ba9b8);color:#062024;border:none;border-radius:11px;padding:11px 20px;font:600 13.5px Sora;cursor:pointer;box-shadow:0 4px 16px rgba(40,215,230,.25)">▶ AFDX 버스트 송신</button>
+    <span id="sendMsg" class="note" style="margin:0">보드에서 유한 버스트 송신 → A/B가 실시간으로 차오릅니다 (무한루프 금지=커널 안전).</span>
+  </div>
+
   <div class="abtiles">
     <div class="ab A"><span class="port" id="aPort">Gi 1/1</span><div class="net">A 망</div>
       <div class="rate" id="aRate">–<small> pkt/s</small></div>
@@ -229,6 +234,14 @@ fetch('/data/afdx_frames.json').then(r=>r.json()).then(d=>{
   $('snbar').innerHTML=(d.sn_seq||[]).slice(0,40).map(s=>`<span>${s}</span>`).join('');
   $('dupNote').innerHTML=`총 ${d.count}프레임, 고유 SN ${d.uniq_sn}개 → SN이 순차 증가(0,1,2…)하며 A·B 양쪽에 실림. <b>SN이 곧 AFDX의 이중화 시퀀스</b>(FRER의 R-TAG에 해당).`;
 }).catch(()=>{$('wstree').textContent='캡처 데이터 없음';});
+$('sendBtn').onclick=async()=>{
+  const b=$('sendBtn');b.disabled=true;b.style.opacity=.5;
+  $('sendMsg').textContent='송신 중… (드라이버 확인 + 유한 버스트, ~10s)';
+  try{const r=await(await fetch('/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({n:8})})).json();
+    $('sendMsg').innerHTML=r.ok?`✅ ${r.msg}${r.reloaded?' (드라이버 재로드됨)':''} — A/B 반영 중`:`⚠ ${r.msg}`;
+  }catch(e){$('sendMsg').textContent='실패: '+e;}
+  finally{b.disabled=false;b.style.opacity=1;}
+};
 setInterval(poll,1000);poll();requestAnimationFrame(animate);
 setInterval(drawChart,1000);window.addEventListener('resize',drawChart);
 </script></body></html>

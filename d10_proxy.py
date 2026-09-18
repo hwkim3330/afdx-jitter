@@ -136,8 +136,29 @@ class H(BaseHTTPRequestHandler):
             self._send(200, open(fp, "rb").read(), ct); return
         self._send(404, json.dumps({"error": "not found"}))
     def do_POST(self):
-        if self.path.split("?")[0] != "/rpc":
-            self._send(404, json.dumps({"error": "use /rpc"})); return
+        p = self.path.split("?")[0]
+        if p == "/send":   # 웹 버튼 → AFDX 유한 버스트 송신(보드 시리얼, sudo 불필요=dialout)
+            import subprocess
+            here = os.path.dirname(os.path.abspath(__file__))
+            n = "8"
+            try:
+                cl = int(self.headers.get("Content-Length", 0))
+                if cl: n = str(int(json.loads(self.rfile.read(cl)).get("n", 8)))
+            except Exception: pass
+            try:
+                r = subprocess.run(["python3", os.path.join(here, "board_send.py"),
+                                    os.environ.get("BOARD_TTY", "/dev/ttyUSB0"), "burst", n],
+                                   capture_output=True, text=True, timeout=40)
+                out = (r.stdout or "") + (r.stderr or "")
+                ok = "BURST_OK" in out
+                msg = "송신 완료" if ok else ("보드 OOM/파워사이클 필요" if "DRIVER_FAIL" in out else "송신 실패")
+                self._send(200, json.dumps({"ok": ok, "msg": msg, "n": n,
+                                            "reloaded": "DRIVER_RELOAD" in out, "log": out[-400:]}))
+            except Exception as e:
+                self._send(200, json.dumps({"ok": False, "msg": str(e)}))
+            return
+        if p != "/rpc":
+            self._send(404, json.dumps({"error": "use /rpc or /send"})); return
         n = int(self.headers.get("Content-Length", 0))
         try:
             req = json.loads(self.rfile.read(n).decode())

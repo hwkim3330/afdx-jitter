@@ -48,12 +48,19 @@ elif MODE == 'start':
     s.write(b"nohup sh -c 'while true; do /mnt/flash/kfdx_app --send --vlid=1 --udp --len=17 --count=3000 >/dev/null 2>&1; done' >/dev/null 2>&1 & echo $! > /tmp/afdxsend.pid; echo STARTED_$(cat /tmp/afdxsend.pid)\r")
     print(rd(1.5).strip()[-120:])
     print('연속 송신 시작(백그라운드)')
-else:  # burst
-    n = int(ARG)
-    o = snd('./kfdx_app --get --vlid=1 2>&1 | grep -iE "vlid"', 1.5)
-    if 'VLID' not in o.upper():
+else:  # burst / webburst — 유한 버스트(무한루프 금지: 커널 oops+OOM 방지)
+    n = int(ARG) if ARG.isdigit() else 8
+    # 드라이버 살아있나 확인, 죽었으면 재로드
+    o = snd('./kfdx_app --get --vlid=1 2>&1 | head -3', 1.8)
+    if 'open error' in o.lower() or 'ioctl error' in o.lower() or 'VLID' not in o.upper():
+        print('DRIVER_RELOAD')
+        snd('rmmod kfdx 2>/dev/null; sleep 1; insmod ./kfdx.ko >/dev/null 2>&1; sleep 2; echo done', 4.0)
+        o = snd('./kfdx_app --get --vlid=1 2>&1 | head -2', 1.5)
+        if 'open error' in o.lower():
+            print('DRIVER_FAIL (보드 OOM/파워사이클 필요)'); s.close(); sys.exit(2)
+    if 'VLID' not in snd('./kfdx_app --get --vlid=1 2>&1|grep -i vlid', 1.2).upper():
         snd('./kfdx_app --add --vlid=1 --bag=200 --dir=tx --type=queueing --min=64 --max=1518', 2.0)
     for i in range(n):
-        snd('./kfdx_app --send --vlid=1 --udp --len=17 --count=3000 >/dev/null 2>&1; echo s', 1.1)
-    print(f'{n}회 송신 완료')
+        snd('./kfdx_app --send --vlid=1 --udp --len=17 --count=3000 >/dev/null 2>&1; echo s', 0.9)
+    print(f'BURST_OK {n}회 송신 완료')
 s.close()
