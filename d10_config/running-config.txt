@@ -1,0 +1,181 @@
+hostname keti1
+username admin privilege 15 password encrypted <REDACTED>
+!
+vlan 1
+!
+vlan 35
+ no flooding
+!
+vlan 100
+!
+!
+!
+!
+no mac address-table learning vlan 35
+mac address-table static dc:a6:32:17:77:11 vlan 35 interface GigabitEthernet 1/4
+mac address-table static dc:a6:32:17:77:6e vlan 35 interface GigabitEthernet 1/4 GigabitEthernet 1/6
+mac address-table static dc:a6:32:b7:a1:77 vlan 35 interface GigabitEthernet 1/1
+spanning-tree mst name 00-22-33-44-55-66 revision 0
+spanning-tree mst te vlan 35
+qos storm multicast 1 kfps
+qos storm broadcast 1 kfps
+!
+stream 1
+ dmac dc-a6-32-17-77-6e
+ smac dc-a6-32-b7-a1-77
+
+!
+stream 2
+ dmac dc-a6-32-b7-a1-77
+ smac dc-a6-32-17-77-6e
+
+!
+stream 5
+ dmac dc-a6-32-17-77-11
+ smac dc-a6-32-b7-a1-77
+
+!
+stream 6
+ dmac dc-a6-32-b7-a1-77
+ smac dc-a6-32-17-77-11
+
+!
+stream 30
+ outer-tag vid 301
+
+!
+stream 31
+ outer-tag vid 301
+
+!
+!
+voice vlan oui 00-01-E3 description Siemens AG phones
+voice vlan oui 00-03-6B description Cisco phones
+voice vlan oui 00-0F-E2 description H3C phones
+voice vlan oui 00-60-B9 description Philips and NEC AG phones
+voice vlan oui 00-D0-1E description Pingtel phones
+voice vlan oui 00-E0-75 description Polycom phones
+voice vlan oui 00-E0-BB description 3Com phones
+!
+interface GigabitEthernet 1/1
+ switchport hybrid allowed vlan 1,35,100
+ switchport hybrid egress-tag none
+ switchport mode hybrid
+ vcl dmacdip
+ stream-id 1
+ stream-id 5
+ stream-id 30
+ qos cos 4
+!
+interface GigabitEthernet 1/2
+!
+interface GigabitEthernet 1/3
+!
+interface GigabitEthernet 1/4
+ switchport hybrid allowed vlan 1,35,100
+ switchport mode hybrid
+ vcl dmacdip
+ stream-id 2
+ stream-id 6
+ stream-id 31
+!
+interface GigabitEthernet 1/5
+ stream-id 31
+!
+interface GigabitEthernet 1/6
+ switchport hybrid allowed vlan 1,35,100
+ switchport mode hybrid
+ vcl dmacdip
+ stream-id 2
+ stream-id 6
+!
+interface 2.5GigabitEthernet 1/1
+!
+interface 2.5GigabitEthernet 1/2
+!
+interface vlan 1
+ ip address 192.168.100.1 255.255.255.0
+!
+spanning-tree aggregation
+ spanning-tree link-type point-to-point
+!
+!
+tsn frer 1
+ mode generation
+ ingress stream-id-list 1
+ frer-vlan 35
+ egress interface GigabitEthernet 1/4,6
+ recovery algorithm vector history-length 8
+ recovery reset-timeout 100
+ admin-state enable
+!
+tsn frer 2
+ mode recovery
+ ingress stream-id-list 2
+ frer-vlan 35
+ egress interface GigabitEthernet 1/1
+ recovery algorithm vector history-length 8
+ recovery reset-timeout 100
+ recovery take-no-sequence
+ recovery individual
+ recovery terminate
+ admin-state enable
+!
+tsn frer 5
+ mode generation
+ ingress stream-id-list 5
+ frer-vlan 35
+ egress interface GigabitEthernet 1/4,6
+ recovery algorithm vector history-length 8
+ recovery reset-timeout 100
+ admin-state enable
+!
+tsn frer 6
+ mode recovery
+ ingress stream-id-list 6
+ frer-vlan 35
+ egress interface GigabitEthernet 1/1
+ recovery algorithm vector history-length 8
+ recovery reset-timeout 100
+ recovery take-no-sequence
+ recovery individual
+ recovery terminate
+ admin-state enable
+!
+line console 0
+!
+line vty 0
+ length 0
+!
+line vty 1
+!
+line vty 2
+!
+line vty 3
+!
+line vty 4
+!
+line vty 5
+!
+line vty 6
+!
+line vty 7
+!
+line vty 8
+!
+line vty 9
+!
+line vty 10
+!
+line vty 11
+!
+line vty 12
+!
+line vty 13
+!
+line vty 14
+!
+line vty 15
+!
+!
+end
