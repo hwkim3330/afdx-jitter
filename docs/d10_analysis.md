@@ -59,3 +59,24 @@ python3 /tmp/d10_analyze.py     # 이 분석 재생성 → d10_config/d10_full_a
 # 잔재 FRER 정리(원하면): frer.config.del [1],[2],[5],[6]
 ```
 전체 덤프: `d10_config/d10_full_analysis.json`. 스펙: `/json_spec`(1172 메서드).
+
+## 6. 완전 설정 덤프 (전체 285개 항목, 2026-09-18)
+`d10_config/d10_complete_dump.json` — 무인자 `.get` 메서드 전부 호출한 **전체 config/status 덤프**(값 있는 것 285개). 아래는 실제 구성값 핵심:
+
+### 시스템 · 관리
+- **관리 IP**: VLAN1 인터페이스 **192.168.100.1/24 (static, DHCP off)**, MAC **00:80:82:B9:64:B3**, 라우팅 off(순수 L2 스위치)
+- **SNMP**: 활성(Mode on, EngineId 800019CB03008082B964B3)
+- **NTP**: 비활성. **SSH**: 설정있음. 시스템 LED: green solid(정상)
+- **MSTP**: 기본값(MaxAge20/Hello2/FwdDelay15, force mstp, BPDU guard off)
+
+### VLAN
+- **정의된 VLAN**: **1(기본/관리), 35(FRER Pi데모), 100**
+- 전 포트 **hybrid 모드**, AccessVlan 1, 전 VLAN trunk 허용. CustomSPort EtherType 0x88A8
+
+### 미설정/기본 (깨끗)
+- PSFP·PTP클록·미러·sFlow·voiceVlan·ACL·portSecurity·DHCP서버·IGMP snooping 등 대부분 기본/미설정.
+
+### 잔재 정리 대상
+- FRER #1/2/5/6 (VLAN35, Pi MAC) + VCL 스트림 #1/2/5/6 = 이전 3-Pi 데모. AFDX용으로 쓰려면 `frer.config.del`·`vcl.config.stream.set`으로 정리 후 재구성.
+
+> **결론**: 이 D10은 기본 L2 + SNMP/SSH 관리만 켜진 상태에서, 이전 Pi FRER 데모 설정(VLAN35)만 얹혀 있음. PSFP·PTP·TAS·미러는 백지 → AFDX 데모용으로 새로 구성 가능. 전체 항목은 `d10_complete_dump.json` 참조.
