@@ -5,14 +5,14 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
 :root{--bg:#0c0d0f;--bg2:#151619;--bg3:#1c1e22;--line:#2a2e35;--line2:#20242a;
- --txt:#f5f6f8;--txt2:#a2a8b2;--txt3:#6a7178;--A:#28d7e6;--B:#f2b03c;--blue:#3a9dff;--red:#e82127;--green:#34d17a;
+ --txt:#f5f6f8;--txt2:#a2a8b2;--txt3:#6a7178;--A:#28d7e6;--B:#f2b03c;--blue:#3a9dff;--red:#e82127;--green:#34d17a;--violet:#a78bfa;
  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.35)}
 *{box-sizing:border-box}html,body{margin:0}
-body{background:radial-gradient(1200px 600px at 50% -10%,rgba(58,157,255,.07),transparent 60%),var(--bg);
+body{background:radial-gradient(1200px 600px at 50% -10%,rgba(58,157,255,.06),transparent 60%),var(--bg);
  color:var(--txt);font:400 14px/1.5 "Sora",system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;min-height:100vh}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
 header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;padding:12px 22px;
- background:rgba(12,13,15,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line2)}
+ background:rgba(12,13,15,.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--line2)}
 .mark{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--A),var(--blue));flex:none;position:relative}
 .mark:after{content:"";position:absolute;inset:6px;border:2px solid #0c0d0f;border-radius:3px}
 header b{font-weight:600;font-size:15px;letter-spacing:.04em}
@@ -20,88 +20,100 @@ header .sub{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--txt
 .spacer{flex:1}
 .chip{display:inline-flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--txt2);background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--txt3);transition:.3s;flex:none}
-.dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}.dot.bad{background:var(--red)}
-main{max-width:1060px;margin:0 auto;padding:22px 18px 70px}
-h2{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--txt3);margin:26px 0 13px;font-weight:600}
-p{color:var(--txt2);margin:0 0 10px;max-width:75ch}
+.dot.on{background:var(--green)}.dot.bad{background:var(--red)}.dot.warnc{background:var(--B)}
+main{max-width:1080px;margin:0 auto;padding:22px 18px 70px}
+h2{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--txt3);margin:28px 0 13px;font-weight:600}
+p{color:var(--txt2);margin:0 0 10px;max-width:76ch}
 .card{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:720px){.grid2{grid-template-columns:1fr}}
-/* topology */
-.topo{background:linear-gradient(180deg,var(--bg3),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:8px}
+.topo{background:linear-gradient(180deg,var(--bg3),var(--bg2));border:1px solid var(--line);border-radius:18px;padding:6px}
 svg{display:block;width:100%;height:auto}
-/* A/B live tiles */
 .abtiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-.ab{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--bg2);position:relative;overflow:hidden}
-.ab.A{border-left:3px solid var(--A)} .ab.B{border-left:3px solid var(--B)}
+.ab{border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:var(--bg2);position:relative}
+.ab.A{border-left:3px solid var(--A)}.ab.B{border-left:3px solid var(--B)}
 .ab .net{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase}
-.ab.A .net{color:var(--A)} .ab.B .net{color:var(--B)}
+.ab.A .net{color:var(--A)}.ab.B .net{color:var(--B)}
 .ab .port{font-size:11px;color:var(--txt3);float:right}
 .ab .rate{font-weight:300;font-size:38px;margin:8px 0 0;line-height:1}
 .ab .rate small{font-size:.4em;color:var(--txt2)}
 .ab .sub{font-size:12px;color:var(--txt3);margin-top:6px}
-.ab .link{font-size:11px;font-family:"IBM Plex Mono",monospace}
-/* compare table */
+.ab .link{font-size:11px;font-family:"IBM Plex Mono",monospace;margin-top:3px}
+.verdict{margin-top:12px;padding:12px 15px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);font-size:13px}
 .tblbox{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--bg2)}
 table{border-collapse:collapse;width:100%;font-size:13px;min-width:560px}
 th,td{text-align:left;padding:11px 15px;border-bottom:1px solid var(--line2);vertical-align:top}
 th{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--txt3);font-weight:500;background:var(--bg3)}
 tr:last-child td{border-bottom:0}
 td.dim{color:var(--txt3);font-family:"IBM Plex Mono",monospace;font-size:11.5px;white-space:nowrap}
-.afdx{color:var(--A)} .frer{color:var(--B)}
-.frbadge{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:2px 7px;color:var(--txt2);margin:2px 3px 0 0}
+.afdx{color:var(--A)}.frer{color:var(--B)}
 .note{font-size:12px;color:var(--txt3);margin-top:10px;line-height:1.6}
-.pulse{position:absolute;inset:0;pointer-events:none;opacity:0}
+/* wireshark panel */
+.ws{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.ws{grid-template-columns:1fr}.abtiles{grid-template-columns:1fr}}
+.wstree{font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.7}
+.wstree .lyr{margin-bottom:8px;border-left:2px solid var(--line);padding-left:11px}
+.wstree .lyr b{display:block;color:var(--blue);font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+.wstree .f{color:var(--txt2)}.wstree .f .k{color:var(--txt3)}.wstree .f .v{color:var(--txt)}
+.wstree .hl{color:var(--A)}
+.hex{font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.55;color:var(--txt2);white-space:pre;overflow-x:auto;background:#08090b;border:1px solid var(--line);border-radius:10px;padding:12px}
+.hex .off{color:var(--txt3)}.hex .b{color:var(--A)}
+.snbar{display:flex;flex-wrap:wrap;gap:3px;margin-top:8px}
+.snbar span{font-family:"IBM Plex Mono",monospace;font-size:10px;background:var(--bg3);border:1px solid var(--line2);border-radius:4px;padding:1px 5px;color:var(--txt2)}
+a.lnk{color:var(--blue);text-decoration:none;font-weight:500}
+.badge{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:2px 8px;color:var(--txt2)}
 </style></head><body>
 <header>
-  <span class="mark"></span><div><b>AFDX A/B vs FRER</b><div class="sub">Kontron D10 · 802.1CB 이중화 실시간 비교</div></div>
+  <span class="mark"></span><div><b>AFDX A/B vs FRER</b><div class="sub">Kontron D10 · 802.1CB 이중화 실시간 분석</div></div>
   <span class="spacer"></span>
   <span class="chip"><span class="dot" id="d10dot"></span>D10 <span id="d10txt">–</span></span>
+  <span class="chip"><span class="dot" id="txdot"></span>AFDX TX <span id="txtxt">–</span></span>
   <span class="chip" id="pollchip">갱신 –</span>
 </header>
 <main>
-  <h2>토폴로지 — AFDX 이중망이 D10을 통과</h2>
+  <h2>토폴로지 — AFDX 이중망이 D10을 통과 (패킷 흐름 실시간)</h2>
   <div class="topo">
-    <svg viewBox="0 0 720 200" role="img" aria-label="AFDX A/B → D10 토폴로지">
-      <!-- AFDX device -->
-      <rect x="24" y="60" width="150" height="80" rx="10" fill="#1c1e22" stroke="#2a2e35"/>
-      <text x="99" y="92" text-anchor="middle" fill="#f5f6f8" font-size="13" font-weight="600">AFDX 기기</text>
-      <text x="99" y="110" text-anchor="middle" fill="#6a7178" font-size="10" font-family="monospace">eth0 / eth1</text>
-      <text x="99" y="126" text-anchor="middle" fill="#6a7178" font-size="9" font-family="monospace">SN in payload</text>
-      <!-- A path -->
-      <line x1="174" y1="84" x2="430" y2="72" stroke="#28d7e6" stroke-width="2.5"/>
-      <circle id="pA" cx="300" cy="78" r="4" fill="#28d7e6" opacity="0"/>
-      <text x="300" y="62" text-anchor="middle" fill="#28d7e6" font-size="10" font-family="monospace">A망 · eth0→Gi1/1</text>
-      <!-- B path -->
-      <line x1="174" y1="116" x2="430" y2="128" stroke="#f2b03c" stroke-width="2.5"/>
-      <circle id="pB" cx="300" cy="122" r="4" fill="#f2b03c" opacity="0"/>
-      <text x="300" y="150" text-anchor="middle" fill="#f2b03c" font-size="10" font-family="monospace">B망 · eth1→Gi1/2</text>
-      <!-- D10 -->
-      <rect x="430" y="50" width="160" height="100" rx="10" fill="#1c1e22" stroke="#3a9dff"/>
-      <text x="510" y="86" text-anchor="middle" fill="#f5f6f8" font-size="13" font-weight="600">Kontron D10</text>
-      <text x="510" y="104" text-anchor="middle" fill="#6a7178" font-size="10" font-family="monospace">WebStaX · 802.1CB</text>
-      <text x="510" y="120" text-anchor="middle" fill="#6a7178" font-size="9" font-family="monospace" id="frerBadge">FRER: –</text>
-      <!-- egress -->
-      <line x1="590" y1="100" x2="680" y2="100" stroke="#34d17a" stroke-width="2.5"/>
-      <text x="656" y="90" text-anchor="middle" fill="#34d17a" font-size="10" font-family="monospace">중복제거 후</text>
+    <svg viewBox="0 0 760 210" role="img" aria-label="AFDX A/B → D10 토폴로지 패킷흐름">
+      <rect x="24" y="65" width="150" height="80" rx="10" fill="#1c1e22" stroke="#2a2e35"/>
+      <text x="99" y="97" text-anchor="middle" fill="#f5f6f8" font-size="13" font-weight="600">AFDX 기기</text>
+      <text x="99" y="115" text-anchor="middle" fill="#6a7178" font-size="10" font-family="monospace">KFDX FPGA</text>
+      <text x="99" y="130" text-anchor="middle" fill="#6a7178" font-size="9" font-family="monospace">SN in payload</text>
+      <path id="pathA" d="M174,86 L470,74" stroke="#28d7e6" stroke-width="2"/>
+      <path id="pathB" d="M174,124 L470,130" stroke="#f2b03c" stroke-width="2"/>
+      <text x="315" y="60" text-anchor="middle" fill="#28d7e6" font-size="10" font-family="monospace">A망 · Gi1/1 →</text>
+      <text x="315" y="152" text-anchor="middle" fill="#f2b03c" font-size="10" font-family="monospace">B망 · Gi1/2 →</text>
+      <g id="dotsA"></g><g id="dotsB"></g>
+      <rect x="470" y="55" width="160" height="100" rx="10" fill="#1c1e22" stroke="#3a9dff"/>
+      <text x="550" y="90" text-anchor="middle" fill="#f5f6f8" font-size="13" font-weight="600">Kontron D10</text>
+      <text x="550" y="108" text-anchor="middle" fill="#6a7178" font-size="10" font-family="monospace">WebStaX · 802.1CB</text>
+      <text x="550" y="124" text-anchor="middle" fill="#6a7178" font-size="9" font-family="monospace" id="frerBadge">FRER –</text>
+      <line x1="630" y1="105" x2="720" y2="105" stroke="#34d17a" stroke-width="2"/>
+      <text x="690" y="95" text-anchor="middle" fill="#34d17a" font-size="10" font-family="monospace">→ 제거 후</text>
     </svg>
   </div>
 
   <div class="abtiles">
     <div class="ab A"><span class="port" id="aPort">Gi 1/1</span><div class="net">A 망</div>
       <div class="rate" id="aRate">–<small> pkt/s</small></div>
-      <div class="sub">누적 RX <span class="mono" id="aRx">–</span> · TX <span class="mono" id="aTx">–</span></div>
-      <div class="link" id="aLink">–</div></div>
+      <div class="sub">누적 RX <span class="mono" id="aRx">–</span></div><div class="link" id="aLink">–</div></div>
     <div class="ab B"><span class="port" id="bPort">Gi 1/2</span><div class="net">B 망</div>
       <div class="rate" id="bRate">–<small> pkt/s</small></div>
-      <div class="sub">누적 RX <span class="mono" id="bRx">–</span> · TX <span class="mono" id="bTx">–</span></div>
-      <div class="link" id="bLink">–</div></div>
+      <div class="sub">누적 RX <span class="mono" id="bRx">–</span></div><div class="link" id="bLink">–</div></div>
   </div>
-  <div class="note" id="trafficNote"></div>
+  <div class="verdict" id="verdict">–</div>
 
   <h2>실시간 A/B 수신율 (pkt/s)</h2>
   <div class="card"><canvas id="chart" height="150"></canvas>
-    <div class="note">AFDX 이중화가 정상이면 A와 B가 <b>거의 동일한 수신율</b>을 보입니다(같은 프레임을 두 망에 동시 송신). 한쪽이 0이면 그 망 장애 — 반대쪽이 무결절로 커버.</div>
+    <div class="note">AFDX 이중화가 정상이면 A(<span style="color:var(--A)">cyan</span>)와 B(<span style="color:var(--B)">amber</span>)가 <b>겹쳐 보일 만큼 동일</b>합니다 — 같은 프레임을 두 망에 동시 송신. 한쪽이 0이면 그 망 장애를 반대쪽이 무결절로 커버.</div>
+  </div>
+
+  <h2>와이어샤크급 — 실제 캡처 AFDX 프레임 해부</h2>
+  <p id="wsSrc" class="note" style="margin-top:-4px"></p>
+  <div class="ws">
+    <div class="card"><div class="wstree" id="wstree">불러오는 중…</div></div>
+    <div class="card"><div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Hex dump</div>
+      <div class="hex" id="hex">–</div>
+      <div style="font-size:11px;color:var(--txt3);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px">SN 시퀀스 (마지막 바이트)</div>
+      <div class="snbar" id="snbar"></div>
+      <div class="note" id="dupNote"></div></div>
   </div>
 
   <h2>차이 — AFDX A/B 리던던시 vs FRER (802.1CB)</h2>
@@ -110,83 +122,113 @@ td.dim{color:var(--txt3);font-family:"IBM Plex Mono",monospace;font-size:11.5px;
     <tbody>
       <tr><td class="dim">표준</td><td>ARINC 664 Part 7</td><td>IEEE 802.1CB (FRER)</td></tr>
       <tr><td class="dim">중복 제거 위치</td><td>수신 <b>엔드시스템</b>(AFDX NIC)</td><td><b>브리지/스위치</b>(D10) 또는 엔드</td></tr>
-      <tr><td class="dim">시퀀스 필드</td><td>AFDX 페이로드 <b>1바이트 SN</b> (VL별 1~255, 0예약)</td><td><b>R-TAG</b> 6바이트, 16비트 시퀀스</td></tr>
-      <tr><td class="dim">복제 위치</td><td>송신 엔드시스템이 A·B 두 망에 동시 송신</td><td>generation 노드가 R-TAG 삽입 후 N포트 복제</td></tr>
-      <tr><td class="dim">제거 알고리즘</td><td>"먼저 온 유효 프레임 채택" + SkewMax 창</td><td>vector / match recovery + history window</td></tr>
-      <tr><td class="dim">망 구성</td><td>물리적 2망(A/B) <b>완전 분리</b></td><td>스트림별 <b>임의 다중 경로</b></td></tr>
-      <tr><td class="dim">프레임 오버헤드</td><td>없음(SN은 원래 AFDX 페이로드)</td><td>+6바이트 R-TAG</td></tr>
-      <tr><td class="dim">상호운용</td><td>AFDX 전용(벤더 규격)</td><td>표준 TSN, 벤더 무관</td></tr>
-      <tr><td class="dim">관측 카운터</td><td>AFDX NIC (rx redundant/valid)</td><td>스위치 FRER (passed/discarded/outOfOrder)</td></tr>
+      <tr><td class="dim">시퀀스 필드</td><td>AFDX 페이로드 <b>1바이트 SN</b> (VL별 1~255)</td><td><b>R-TAG</b> 6바이트, 16비트 시퀀스</td></tr>
+      <tr><td class="dim">복제 위치</td><td>송신 엔드시스템이 A·B 동시 송신</td><td>generation 노드가 R-TAG 삽입 후 복제</td></tr>
+      <tr><td class="dim">제거 알고리즘</td><td>"먼저 온 유효 프레임" + SkewMax</td><td>vector/match recovery + history window</td></tr>
+      <tr><td class="dim">프레임 오버헤드</td><td>없음(SN은 원래 페이로드)</td><td>+6바이트 R-TAG</td></tr>
+      <tr><td class="dim">상호운용</td><td>AFDX 전용</td><td>표준 TSN, 벤더 무관</td></tr>
+      <tr><td class="dim">관측 카운터</td><td>AFDX NIC (rx redundant)</td><td>스위치 FRER (passed/discarded/tagless)</td></tr>
     </tbody>
   </table></div>
-  <div class="note">⚠ 핵심: 둘은 <b>같은 목적(무결절 이중화)·다른 계층</b>이라 서로 직접 호환되지 않습니다 — AFDX 프레임엔 R-TAG가 없어 D10 FRER가 SN으로 자동 제거하지 못하고, AFDX NIC은 R-TAG를 모릅니다. D10에서 FRER를 쓰려면 R-TAG 생성/복구를 스위치가 담당(별도 스트림).</div>
+  <div class="verdict" style="border-color:color-mix(in srgb,var(--violet) 40%,var(--line))">
+    <b style="color:var(--violet)">호환성 실측 결론:</b> 캡처한 AFDX 프레임엔 <b>R-TAG가 없습니다</b>(EtherType 0x0800 IPv4 직행) → D10 FRER는 SN으로 자동 제거 불가. 둘은 <b>같은 목적·다른 계층</b>. 상호연동하려면 D10이 게이트웨이로 R-TAG를 <b>생성/제거</b>해야 함(별도 스트림).
+  </div>
 
   <h2>D10 FRER 인스턴스 (실시간)</h2>
   <div class="tblbox"><table>
-    <thead><tr><th>ID</th><th>Mode</th><th>VLAN</th><th>Egress</th><th>Alg</th><th>Hist</th><th>Oper</th></tr></thead>
-    <tbody id="frerRows"><tr><td colspan=7 style="text-align:center;color:var(--txt3);padding:16px">불러오는 중…</td></tr></tbody>
+    <thead><tr><th>ID</th><th>Mode</th><th>VLAN</th><th>Egress</th><th>Alg</th><th>Oper</th></tr></thead>
+    <tbody id="frerRows"><tr><td colspan=6 style="text-align:center;color:var(--txt3);padding:16px">불러오는 중…</td></tr></tbody>
   </table></div>
-  <div class="note">기존 인스턴스는 이전 데모 잔재일 수 있습니다. AFDX A/B(Gi1/1·1/2)용 FRER 복구를 새로 구성하려면 스트림+recovery 인스턴스가 필요합니다(R-TAG 전제).</div>
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let prev=null, hist={A:[],B:[]}, MAX=90;
+let prev=null,hist={A:[],B:[]},MAX=90,rateA=0,rateB=0;
 function num(n){return n==null?'–':n.toLocaleString();}
 async function poll(){
-  try{
-    const r=await fetch('/snapshot',{cache:'no-store'}); const d=await r.json();
-    $('d10dot').className='dot on'; $('d10txt').textContent='연결';
-    $('pollchip').textContent='갱신 '+new Date().toLocaleTimeString();
-    render(d);
-  }catch(e){ $('d10dot').className='dot bad'; $('d10txt').textContent='끊김'; $('pollchip').textContent='프록시 대기…'; }
+  try{const d=await(await fetch('/snapshot',{cache:'no-store'})).json();
+    $('d10dot').className='dot on';$('d10txt').textContent='연결';
+    $('pollchip').textContent='갱신 '+new Date().toLocaleTimeString();render(d);
+  }catch(e){$('d10dot').className='dot bad';$('d10txt').textContent='끊김';$('pollchip').textContent='프록시 대기…';}
 }
-function portLink(d,name){ const p=(d.ports||[]).find(x=>x.key===name); return p?p.val:null; }
+function pl(d,n){const p=(d.ports||[]).find(x=>x.key===n);return p?p.val:null;}
 function render(d){
-  $('aPort').textContent=d.port_a; $('bPort').textContent=d.port_b;
-  const la=portLink(d,d.port_a), lb=portLink(d,d.port_b);
-  $('aLink').innerHTML = la&&la.Link?`<span style="color:var(--green)">● UP ${la.Speed.replace('speed','')}</span>`:'<span style="color:var(--red)">● DOWN</span>';
-  $('bLink').innerHTML = lb&&lb.Link?`<span style="color:var(--green)">● UP ${lb.Speed.replace('speed','')}</span>`:'<span style="color:var(--red)">● DOWN</span>';
-  const ra=d.rmon_a||{}, rb=d.rmon_b||{};
-  $('aRx').textContent=num(ra.RxPkts); $('aTx').textContent=num(ra.TxPkts);
-  $('bRx').textContent=num(rb.RxPkts); $('bTx').textContent=num(rb.TxPkts);
-  // rate = delta RxPkts / dt
-  let arate=null,brate=null;
-  if(prev){ const dt=(d.ts-prev.ts)||1;
-    arate=Math.max(0,((ra.RxPkts||0)-(prev.a||0))/dt);
-    brate=Math.max(0,((rb.RxPkts||0)-(prev.b||0))/dt);
-    hist.A.push(arate); hist.B.push(brate); if(hist.A.length>MAX){hist.A.shift();hist.B.shift();}
-  }
+  $('aPort').textContent=d.port_a;$('bPort').textContent=d.port_b;
+  const la=pl(d,d.port_a),lb=pl(d,d.port_b);
+  $('aLink').innerHTML=la&&la.Link?`<span style="color:var(--green)">● UP ${la.Speed.replace('speed','')}</span>`:'<span style="color:var(--red)">● DOWN</span>';
+  $('bLink').innerHTML=lb&&lb.Link?`<span style="color:var(--green)">● UP ${lb.Speed.replace('speed','')}</span>`:'<span style="color:var(--red)">● DOWN</span>';
+  const ra=d.rmon_a||{},rb=d.rmon_b||{};
+  $('aRx').textContent=num(ra.RxPkts);$('bRx').textContent=num(rb.RxPkts);
+  if(prev){const dt=(d.ts-prev.ts)||1;
+    rateA=Math.max(0,((ra.RxPkts||0)-(prev.a||0))/dt);rateB=Math.max(0,((rb.RxPkts||0)-(prev.b||0))/dt);
+    hist.A.push(rateA);hist.B.push(rateB);if(hist.A.length>MAX){hist.A.shift();hist.B.shift();}}
   prev={ts:d.ts,a:ra.RxPkts||0,b:rb.RxPkts||0};
-  $('aRate').innerHTML=(arate==null?'–':arate.toFixed(0))+'<small> pkt/s</small>';
-  $('bRate').innerHTML=(brate==null?'–':brate.toFixed(0))+'<small> pkt/s</small>';
-  // pulse dots on traffic
-  if(arate>0)pulse('pA'); if(brate>0)pulse('pB');
-  // traffic note
-  const rxa=ra.RxPkts||0, rxb=rb.RxPkts||0;
-  if(rxa===0&&rxb===0) $('trafficNote').innerHTML='⏳ <b>A/B 수신 0</b> — AFDX 기기가 아직 송신하지 않음(보드 전원/링크 확인). 트래픽이 흐르면 두 망이 동시에 살아납니다.';
-  else{ const diff=Math.abs(rxa-rxb), pct=rxa?100*diff/Math.max(rxa,rxb):0;
-    $('trafficNote').innerHTML=`✅ A·B 동시 수신 중 — 수신 프레임차 ${num(diff)} (${pct.toFixed(1)}%). ${pct<5?'<b style="color:var(--green)">이중화 균형 정상</b>(양 망 동일 트래픽).':'<b style="color:var(--B)">불균형</b> — 한 망 손실 가능성.'}`; }
-  // FRER rows
-  const badges=(d.frer||[]).map(f=>`<span class="frbadge">#${f.id} ${f.config.Mode}</span>`).join('')||'없음';
-  $('frerBadge').textContent='FRER: '+((d.frer||[]).length?((d.frer||[]).length+'개'):'미설정');
+  $('aRate').innerHTML=(rateA).toFixed(0)+'<small> pkt/s</small>';
+  $('bRate').innerHTML=(rateB).toFixed(0)+'<small> pkt/s</small>';
+  const flowing=rateA>1||rateB>1;
+  $('txdot').className='dot '+(flowing?'on':'warnc');$('txtxt').textContent=flowing?'송신중':'대기';
+  const rxa=ra.RxPkts||0,rxb=rb.RxPkts||0;
+  if(!flowing&&rxa===0&&rxb===0)
+    $('verdict').innerHTML='⏳ <b>A/B 수신 0</b> — AFDX 보드 송신 대기(전원/드라이버 확인). 버스트가 흐르면 두 망이 동시에 살아납니다.';
+  else{const diff=Math.abs(rxa-rxb),pct=Math.max(rxa,rxb)?100*diff/Math.max(rxa,rxb):0;
+    $('verdict').innerHTML=`✅ <b>A·B 동시 수신</b> — 누적 A ${num(rxa)} / B ${num(rxb)}, 차이 ${num(diff)} (${pct.toFixed(2)}%). `+
+      (pct<2?'<b style="color:var(--green)">이중화 균형 정상</b> — 두 망이 동일 프레임 운반.':'<b style="color:var(--B)">불균형</b> — 한 망 손실 가능성.');}
+  $('frerBadge').textContent='FRER '+((d.frer||[]).length||0);
   $('frerRows').innerHTML=(d.frer||[]).map(f=>{const c=f.config,s=f.status||{};
     return `<tr><td class="mono">${f.id}</td><td>${c.Mode}</td><td class="mono">${c.FrerVlan}</td>
-    <td class="mono">${(c.EgressPorts||[]).join(', ')}</td><td>${c.Algorithm}</td><td class="mono">${c.HistoryLen}</td>
+    <td class="mono">${(c.EgressPorts||[]).join(', ')}</td><td>${c.Algorithm}</td>
     <td><span style="color:${s.OperState==='active'?'var(--green)':'var(--txt3)'}">${s.OperState||'–'}</span></td></tr>`;
-  }).join('')||'<tr><td colspan=7 style="text-align:center;color:var(--txt3);padding:16px">FRER 인스턴스 없음</td></tr>';
-  drawChart();
+  }).join('')||'<tr><td colspan=6 style="text-align:center;color:var(--txt3);padding:16px">FRER 인스턴스 없음</td></tr>';
 }
-let pulseT={};
-function pulse(id){const e=$(id);if(!e)return;e.style.transition='none';e.style.opacity='1';
-  requestAnimationFrame(()=>{e.style.transition='opacity .8s';e.style.opacity='0';});}
+// 패킷 방향 애니메이션 (rate 비례)
+const dotsA=[],dotsB=[];
+function ensureDots(g,arr,n,col){while(arr.length<n){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c.setAttribute('r','3.2');c.setAttribute('fill',col);c.p=Math.random();g.appendChild(c);arr.push(c);}
+  while(arr.length>n){g.removeChild(arr.pop());}}
+function animate(){
+  const nA=Math.min(12,Math.round(rateA/60)),nB=Math.min(12,Math.round(rateB/60));
+  ensureDots($('dotsA'),dotsA,nA,'#28d7e6');ensureDots($('dotsB'),dotsB,nB,'#f2b03c');
+  const pA=$('pathA'),pB=$('pathB'),lA=pA.getTotalLength(),lB=pB.getTotalLength();
+  const step=0.006+Math.min(0.02,rateA/40000);
+  dotsA.forEach(c=>{c.p=(c.p+step)%1;const pt=pA.getPointAtLength(c.p*lA);c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);});
+  const stepB=0.006+Math.min(0.02,rateB/40000);
+  dotsB.forEach(c=>{c.p=(c.p+stepB)%1;const pt=pB.getPointAtLength(c.p*lB);c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);});
+  requestAnimationFrame(animate);
+}
 function drawChart(){const cv=$('chart');cv.width=cv.clientWidth;const cx=cv.getContext('2d'),W=cv.width,H=cv.height,p=30;
   cx.clearRect(0,0,W,H);const all=hist.A.concat(hist.B);let mx=Math.max(10,...all);
   cx.strokeStyle='#20242a';cx.fillStyle='#6a7178';cx.font='10px "IBM Plex Mono",monospace';
   for(let i=0;i<=3;i++){const y=p+(H-2*p)*i/3;cx.beginPath();cx.moveTo(p,y);cx.lineTo(W-6,y);cx.stroke();cx.fillText(Math.round(mx-mx*i/3),3,y+3);}
-  const line=(arr,col)=>{if(arr.length<2)return;cx.strokeStyle=col;cx.lineWidth=2;cx.shadowColor=col;cx.shadowBlur=6;cx.beginPath();
-    arr.forEach((v,i)=>{const x=p+(W-p-6)*i/Math.max(1,MAX-1),y=p+(H-2*p)*(1-v/mx);i?cx.lineTo(x,y):cx.moveTo(x,y);});cx.stroke();cx.shadowBlur=0;};
+  const line=(arr,col)=>{if(arr.length<2)return;cx.strokeStyle=col;cx.lineWidth=2;cx.beginPath();
+    arr.forEach((v,i)=>{const x=p+(W-p-6)*i/Math.max(1,MAX-1),y=p+(H-2*p)*(1-v/mx);i?cx.lineTo(x,y):cx.moveTo(x,y);});cx.stroke();};
   line(hist.A,'#28d7e6');line(hist.B,'#f2b03c');
   cx.fillStyle='#28d7e6';cx.fillText('A',W-40,16);cx.fillStyle='#f2b03c';cx.fillText('B',W-22,16);}
-setInterval(poll,1000);poll();
-window.addEventListener('resize',drawChart);
+// 와이어샤크 패널 (저장된 실캡처)
+fetch('/data/afdx_frames.json').then(r=>r.json()).then(d=>{
+  $('wsSrc').textContent='출처: '+(d.source||'실캡처')+` · ${d.count}프레임`;
+  const f=d.frames[0];const e=f.eth,ip=f.ip||{},u=f.udp||{};
+  $('wstree').innerHTML=`
+   <div class="lyr"><b>Ethernet II — ${f.len} bytes</b>
+     <div class="f"><span class="k">Destination:</span> <span class="hl">${e.dst}</span> ${e.vlid!=null?'<span class="badge">AFDX multicast · VLID '+e.vlid+'</span>':''}</div>
+     <div class="f"><span class="k">Source:</span> <span class="v">${e.src}</span></div>
+     <div class="f"><span class="k">Type:</span> <span class="v">${e.type} (IPv4)</span></div></div>
+   <div class="lyr"><b>Internet Protocol v4</b>
+     <div class="f"><span class="k">Src:</span> <span class="v">${ip.src}</span> → <span class="k">Dst:</span> <span class="v">${ip.dst}</span></div>
+     <div class="f"><span class="k">Total Length:</span> <span class="v">${ip.total_len}</span> · <span class="k">TTL:</span> <span class="v">${ip.ttl}</span> · <span class="k">Proto:</span> <span class="v">${ip.proto} (UDP)</span></div></div>
+   <div class="lyr"><b>User Datagram Protocol</b>
+     <div class="f"><span class="k">Src Port:</span> <span class="v">${u.sport}</span> · <span class="k">Dst Port:</span> <span class="v">${u.dport}</span> · <span class="k">Length:</span> <span class="v">${u.len}</span></div></div>
+   <div class="lyr" style="border-color:var(--A)"><b style="color:var(--A)">AFDX (ARINC 664 P7)</b>
+     <div class="f"><span class="k">Sequence Number:</span> <span class="hl">${f.afdx.sn}</span> <span class="badge">마지막 바이트 · 1~255 순환</span></div>
+     <div class="f"><span class="k">Redundancy:</span> <span class="v">A/B 두 망에 동일 프레임(같은 SN) 동시 송신</span></div></div>`;
+  // hex dump
+  const hx=f.hex;let out='';
+  for(let i=0;i<hx.length;i+=32){const off=(i/2).toString(16).padStart(4,'0');
+    const bytes=hx.slice(i,i+32).match(/../g)||[];
+    const asc=bytes.map(b=>{const c=parseInt(b,16);return c>=32&&c<127?String.fromCharCode(c):'.';}).join('');
+    out+=`<span class="off">${off}</span>  <span class="b">${bytes.join(' ').padEnd(47)}</span>  ${asc}\n`;}
+  $('hex').textContent='';$('hex').innerHTML=out;
+  $('snbar').innerHTML=(d.sn_seq||[]).slice(0,40).map(s=>`<span>${s}</span>`).join('');
+  $('dupNote').innerHTML=`총 ${d.count}프레임, 고유 SN ${d.uniq_sn}개 → SN이 순차 증가(0,1,2…)하며 A·B 양쪽에 실림. <b>SN이 곧 AFDX의 이중화 시퀀스</b>(FRER의 R-TAG에 해당).`;
+}).catch(()=>{$('wstree').textContent='캡처 데이터 없음';});
+setInterval(poll,1000);poll();requestAnimationFrame(animate);
+setInterval(drawChart,1000);window.addEventListener('resize',drawChart);
 </script></body></html>

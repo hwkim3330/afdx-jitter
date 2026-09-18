@@ -55,6 +55,64 @@ def snapshot():
     out["frer"] = frer
     return out
 
+def _u16(b, o): return (b[o] << 8) | b[o+1]
+def decode_afdx(b):
+    """AFDX 프레임 바이트 → 와이어샤크급 필드."""
+    d = {"len": len(b), "hex": b.hex()}
+    d["eth"] = {"dst": ':'.join(f'{x:02x}' for x in b[0:6]),
+                "src": ':'.join(f'{x:02x}' for x in b[6:12]),
+                "type": f'0x{_u16(b,12):04x}',
+                "vlid": b[5] if b[0] == 0x03 else None}
+    et = _u16(b, 12)
+    if et == 0x0800 and len(b) >= 34:
+        ip = b[14:]; ihl = (ip[0] & 0xf) * 4
+        d["ip"] = {"src": '.'.join(str(x) for x in ip[12:16]),
+                   "dst": '.'.join(str(x) for x in ip[16:20]),
+                   "proto": ip[9], "total_len": _u16(ip, 2), "ttl": ip[8]}
+        if ip[9] == 17 and len(ip) >= ihl + 8:
+            u = ip[ihl:]
+            d["udp"] = {"sport": _u16(u, 0), "dport": _u16(u, 2), "len": _u16(u, 4)}
+    d["afdx"] = {"sn": b[-1]}  # AFDX 시퀀스번호 = 마지막 바이트
+    return d
+
+def _parse_pcap(raw):
+    if len(raw) < 24: return []
+    import struct
+    magic = raw[:4]
+    le = magic in (b'\xd4\xc3\xb2\xa1', b'\x4d\x3c\xb2\xa1')
+    end = '<' if le else '>'
+    off = 24; pkts = []
+    while off + 16 <= len(raw):
+        _, _, incl, _ = struct.unpack(end + 'IIII', raw[off:off+16])
+        off += 16
+        if off + incl > len(raw): break
+        pkts.append(raw[off:off+incl]); off += incl
+    return pkts
+
+def capture_afdx(iface, dur=2.0, maxf=24):
+    import subprocess, tempfile, os as _os
+    f = tempfile.mktemp(suffix='.pcap')
+    try:
+        subprocess.run(['tcpdump', '-i', iface, '-c', str(maxf), '-w', f,
+                        '--time-stamp-precision=micro', 'ether[0:2]=0x0300'],
+                       timeout=dur + 1.5, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+    try:
+        raw = open(f, 'rb').read()
+    except Exception:
+        return {"frames": [], "count": 0}
+    finally:
+        try: _os.unlink(f)
+        except Exception: pass
+    pk = _parse_pcap(raw)
+    frames = [decode_afdx(b) for b in pk if len(b) >= 14 and b[0] == 0x03]
+    sns = [fr["afdx"]["sn"] for fr in frames]
+    uniq = len(set(sns))
+    return {"frames": frames[:12], "count": len(frames),
+            "sn_seq": sns[:40], "uniq_sn": uniq,
+            "dup": len(sns) - uniq}
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def _send(self, code, body, ctype="application/json"):
@@ -68,6 +126,8 @@ class H(BaseHTTPRequestHandler):
         if path in ("/", "/index.html", "/frer"): path = "/frer.html"
         if path == "/snapshot":
             self._send(200, json.dumps(snapshot())); return
+        if path == "/capture":
+            self._send(200, json.dumps(capture_afdx(os.environ.get("CAP_IF", "enp4s0")))); return
         fp = os.path.normpath(os.path.join(WEB, path.lstrip("/")))
         if fp.startswith(WEB) and os.path.isfile(fp):
             ct = ("text/html" if fp.endswith(".html") else "application/javascript"
