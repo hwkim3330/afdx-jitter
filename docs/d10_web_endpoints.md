@@ -47,3 +47,16 @@
 - 진단/시스템: sys, sysinfo, ntp, thermal_protect, fan, ddmi(SFP), sys_led
 
 전체 목록: `d10_config/d10_web_pages.txt` (227). 각 페이지명 = `/config/<페이지>` POST 핸들러(대부분).
+
+## 액션 엔드포인트 사용법 (검증됨, `d10_web.py`)
+JSON-RPC엔 없는 액션들 — 웹 POST로 스크립트화:
+| 액션 | 흐름 |
+|---|---|
+| **Ping** | `POST /config/ping4`(ip_addr,count,length,ttlvalue,...) → 302 `?ioIndex=X` → `GET /config/ping4?ioIndex=X` 폴링(→"Ping session completed") |
+| **Traceroute** | `POST /config/traceroute4`(ip_addr,maxttl,probes,timeout,firstttl,icmp,numeric) → 동일 ioIndex 폴링 |
+| **config 다운로드** | `POST /config/icfg_conf_download` `file_name=running-config` → 텍스트 config |
+| **★ config 저장(영구)** | `POST /config/icfg_conf_save` `save=1` → running→startup (그동안 running-only라 리부트 시 날아가던 문제 해결) |
+| config 업로드/활성/삭제 | `/config/icfg_conf_upload`(merge,source_file) / `_activate` / `_delete` |
+| 펌웨어 | `POST /config/firmware`(firmware,coolstart) |
+| 리셋 | `POST /config/misc`(factory / warm+restartDevice) |
+- 검증: `d10_web.py ping 192.168.100.50` → 3/3 수신 0.66ms 확인. VeriPHY는 JSON-RPC(`port.control.veriphy.start.set`).
