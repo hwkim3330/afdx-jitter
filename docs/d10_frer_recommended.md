@@ -44,26 +44,24 @@ Talker ──► S1(gen) ──┤                        ├──► S4(recove
 
 ---
 
-## 1a. ★ A2Z 차량 실구성 — 앞2(LiDAR) + 뒤2(ACU/PC), 4× D10 링
-실제 과제 배치: **앞 2대(F1·F2)=LiDAR 연결**, **뒤 2대(B1·B2), B1=PC/ACU 연결**. 목적 = **LiDAR 포인트클라우드를 이중경로로 컴퓨트까지 무손실 전달**(단일 스위치/링크 고장에도 인지 안 끊김 = 자율주행 안전).
+## 1a. ★ A2Z 차량 실구성 — D10 3대 (앞2=LiDAR, 뒤1=ACU/PC)
+실제 과제 배치: **앞 2대(F1·F2) 각각 LiDAR 연결**, **뒤 1대(B1) = PC/ACU 연결**. 목적 = **LiDAR 포인트클라우드를 이중경로로 컴퓨트까지 무손실 전달**(단일 스위치/링크 고장에도 인지 안 끊김 = 자율주행 안전).
 ```
-   LiDAR-F ─► F1 ───────── B1 ─► ACU/PC (listener)
-              │  ╲       ╱  │
-              │   (링 양방향)  │
-              │  ╱       ╲  │
-   LiDAR-R ─► F2 ───────── B2
-   링: F1─B1─B2─F2─F1 (4노드 링, 앞→뒤 2경로 확보)
+   LiDAR1 ─► F1 ════════직결════════ B1 ─► ACU/PC
+                 ╲                ╱
+                  ╲── F2 ────────╱
+   LiDAR2 ─► F2
+   삼각형: F1─B1(직결), F1─F2, F2─B1   ← 3대 상호연결이라야 2경로 확보
 ```
-- **각 LiDAR 스트림**: 연결된 front 스위치에서 **FRER generation**(링 **양방향**으로 복제) → **B1(PC측)에서 recovery**(dedupe).
-  - LiDAR-F(F1 연결): F1 gen → 경로A(F1→B1 직접), 경로B(F1→F2→B2→B1) → B1 recovery.
-  - LiDAR-R(F2 연결): F2 gen → 경로A(F2→B2→B1), 경로B(F2→F1→B1) → B1 recovery.
-- **무결절**: 링 어느 링크/스위치 1개 죽어도 반대 방향으로 LiDAR 데이터 도착 → **Lost=0**. 자율주행 인지 무중단.
-- **스트림 식별**: LiDAR별 전용 VLAN(예 VLAN 201=LiDAR-F, 202=LiDAR-R) 또는 LiDAR src/dst MAC로 VCL 매칭.
-- **generation/recovery 부담**: F1·F2(각 자기 LiDAR gen) + B1(양 LiDAR recovery). B2는 링 포워딩.
-- **보너스 — PSFP로 LiDAR 대역 policing**: LiDAR가 초당 수백 Mbps 쏟으므로, flow meter로 VL/스트림별 rate 상한 걸어 폭주 격리(802.1Qci). AFDX BAG 감시와 같은 원리.
-- **PTP**: 링 전체 시각동기(802.1AS) → LiDAR 타임스탬프/센서 융합 정렬.
+- **LiDAR1(F1)**: F1이 generation → 경로A(F1→B1 직결) + 경로B(F1→F2→B1) 복제 → **B1 recovery**로 dedupe.
+- **LiDAR2(F2)**: F2가 generation → 경로A(F2→B1 직결) + 경로B(F2→F1→B1) 복제 → **B1 recovery**.
+- **무결절**: 링크/스위치 1개 죽어도 나머지 경로로 도착 → **Lost=0**, LiDAR 인지 무중단.
+  - 예: F1─B1 직결 끊김 → LiDAR1은 F2 경유로 계속 도착.
+- **FRER 부담**: **F1·F2 = 각자 자기 LiDAR generation**, **B1 = 두 LiDAR recovery**(인스턴스 2개). 중계 전용 스위치 없음(3대 다 역할 있음).
+- **스트림 식별**: LiDAR별 전용 VLAN(예 201=LiDAR1, 202=LiDAR2) 또는 LiDAR src/dst MAC로 VCL 매칭.
+- **보너스**: **PSFP flow meter로 LiDAR 대역 policing**(폭주 격리, 802.1Qci), **PTP로 센서 시각동기**(802.1AS).
 
-> 참고: F/B 4대 상호배선(링 vs 이중스타)에 따라 gen egress·recovery ingress 포트만 달라짐. **실제 스위치간 케이블 연결(어느 포트↔어느 포트)만 알려주시면** 각 스위치 FRER/VLAN을 정확히 산출해 스크립트로 뽑아드림.
+> ⚠ 3대가 **삼각형(F1─F2, F1─B1, F2─B1 전부 연결)** 이라야 각 LiDAR에 2 disjoint 경로가 생겨 FRER가 성립. 만약 **일자 체인(F1─F2─B1)** 이면 F1 LiDAR는 경로가 하나뿐이라 이중화 불가. **실제 스위치간 배선만 확인**되면 각 스위치 포트별 gen/recovery를 정확히 산출.
 
 ---
 
